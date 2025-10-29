@@ -1,19 +1,22 @@
 FROM node:20-alpine AS build
 
+RUN corepack enable
+
 WORKDIR /app
 
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-COPY package*.json ./
-RUN npm i
-COPY . .
-RUN npm run build
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-FROM nginx:1.27-alpine AS runtime
+COPY . .
+RUN pnpm build
+
+FROM nginx:stable-alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY --from=build nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 3000
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+EXPOSE 3000
 CMD ["nginx", "-g", "daemon off;"]

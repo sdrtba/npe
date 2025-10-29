@@ -1,9 +1,8 @@
-import uvicorn
 from sqlalchemy.orm import Session
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.middleware.cors import CORSMiddleware
-from schemas import (
+from app.schemas import (
     UserCreateS,
     UserS,
     ContactS,
@@ -12,7 +11,7 @@ from schemas import (
     GroupS,
     GroupCreateS,
 )
-from services import (
+from app.services import (
     create_database,
     get_db,
     get_db_user,
@@ -38,10 +37,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://213.108.23.238",
-        "https://213.108.23.238",
-        "http://sdrtba.ru",
-        "https://sdrtba.ru",
+        "http://localhost",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -186,7 +182,3 @@ async def delete_group(
 @app.get("/api/health")
 async def get_health():
     return {"status": "ok"}
-
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
