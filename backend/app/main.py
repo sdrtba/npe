@@ -1,35 +1,16 @@
 from sqlalchemy.orm import Session
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Cookie, FastAPI, Depends, HTTPException, Response, Request
 from starlette.middleware.cors import CORSMiddleware
-from app.schemas import (
-    UserCreateS,
-    UserS,
-    ContactS,
-    ContactCreateS,
-    PasswordUpdateS,
-    GroupS,
-    GroupCreateS,
-)
+from app.schemas import UserCreateS, UserS, TokenResponse
 from app.services import (
     create_database,
     get_db,
     get_db_user,
     create_db_user,
-    create_token,
-    get_db_contacts,
-    get_current_user,
-    get_db_contact,
-    create_db_contact,
-    update_db_contact,
-    delete_db_contact,
-    auth_user,
-    update_user_password,
-    get_db_groups,
-    create_db_group,
-    delete_db_group,
-    update_db_group,
+    create_tokens,
 )
+from app.config import settings
+
 
 app = FastAPI()
 
@@ -50,133 +31,78 @@ async def on_startup():
     create_database()
 
 
-@app.post("/api/token")
-async def generate_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+@app.post(
+    "/api/auth/register",
+    response_model=TokenResponse,
+)
+async def register_user(
+    user: UserCreateS, db: Session = Depends(get_db), response: Response = None
 ):
-    db_user = await auth_user(
-        username=form_data.username, password=form_data.password, db=db
-    )
-
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Invalid Credentials")
-
-    return await create_token(user=db_user)
-
-
-@app.post("/api/users")
-async def create_user(user: UserCreateS, db: Session = Depends(get_db)):
-    db_user = await get_db_user(username=user.username, db=db)
-
+    db_user = await get_db_user(email=user.email, db=db)
     if db_user:
         raise HTTPException(status_code=409, detail="User already exists")
-
     db_user = await create_db_user(user, db)
 
-    return await create_token(db_user)
+    tokens = await create_tokens(db_user)
+    response.set_cookie(
+        key="refreshToken",
+        value=tokens["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=settings.TOKEN_EXPIRATION_MINUTES * 86400,
+    )
+    return TokenResponse(accessToken=tokens["access_token"])
 
 
-@app.post("/api/change-password")
-async def update_user(
-    pass_update: PasswordUpdateS,
-    db: Session = Depends(get_db),
-    user: UserS = Depends(get_current_user),
-):
-    return await update_user_password(
-        user=user,
-        old_password=pass_update.old_password,
-        new_password=pass_update.new_password,
-        db=db,
+@app.post(
+    "/api/auth/login",
+    response_model=dict,
+)
+async def login(user: UserCreateS, response: Response):
+    print(user.email, user.password)
+
+    response.set_cookie(
+        key="refreshToken",
+        value="refresh_token",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=settings.TOKEN_EXPIRATION_MINUTES * 86400,
     )
 
-
-@app.get("/api/users/me", response_model=UserS)
-async def get_user(user: UserS = Depends(get_current_user)):
-    return user
+    return {"accessToken": "accessToken"}
 
 
-@app.post("/api/contacts", response_model=ContactS)
-async def create_contact(
-    contact: ContactCreateS,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await create_db_contact(user=user, contact=contact, db=db)
+@app.post(
+    "/api/auth/logout",
+    response_model=dict,
+)
+async def logout():
+    print("Logout")
+    return {"accessToken": None}
 
 
-@app.get("/api/contacts/{id}", response_model=ContactS)
-async def get_contact(
-    contact_id: int,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await get_db_contact(contact_id=contact_id, user=user, db=db)
+@app.get(
+    "/api/auth/me",
+    response_model=UserS,
+)
+async def me(request: Request):
+    print("me")
+    cookie = request.cookies
+    print("Cookie:", cookie)
+    if not cookie:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return UserS(id=1, email="qwe@qwe")
 
 
-@app.get("/api/contacts", response_model=list[ContactS])
-async def get_contacts(
-    offset: int = 0,
-    limit: int = 100,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await get_db_contacts(offset=offset, limit=limit, user=user, db=db)
-
-
-@app.put("/api/contacts/{id}", response_model=ContactS)
-async def update_contact(
-    contact_id: int,
-    contact: ContactCreateS,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await update_db_contact(
-        contact_id=contact_id, user=user, contact=contact, db=db
-    )
-
-
-@app.delete("/api/contacts/{id}")
-async def delete_contact(
-    contact_id: int,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await delete_db_contact(contact_id=contact_id, user=user, db=db)
-
-
-@app.get("/api/groups", response_model=list[GroupS])
-async def get_groups(
-    user: UserS = Depends(get_current_user), db: Session = Depends(get_db)
-):
-    return await get_db_groups(user=user, db=db)
-
-
-@app.post("/api/groups", response_model=GroupS)
-async def create_group(
-    group: GroupCreateS,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await create_db_group(group=group, user=user, db=db)
-
-
-@app.put("/api/groups/{id}", response_model=GroupS)
-async def update_contact(
-    group_id: int,
-    group: GroupCreateS,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await update_db_group(group_id=group_id, user=user, group=group, db=db)
-
-
-@app.delete("/api/groups/{id}")
-async def delete_group(
-    group_id: int,
-    user: UserS = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return await delete_db_group(group_id=group_id, user=user, db=db)
+@app.post(
+    "/api/auth/refresh-token",
+    response_model=dict,
+)
+async def refresh_token():
+    print("refresh-token")
+    return {"accessToken": "refreshAccessToken"}
 
 
 @app.get("/api/health")
