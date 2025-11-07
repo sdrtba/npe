@@ -71,7 +71,7 @@ async def update_user_password(
     if not db_user.verify_password(old_password):
         raise HTTPException(status_code=401, detail="Incorrect current password")
 
-    db_user.hashed_password = bcrypt.hash(new_password)
+    db_user.password_hash = bcrypt.hash(new_password)
     db.commit()
     db.refresh(db_user)
 
