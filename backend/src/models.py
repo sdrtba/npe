@@ -14,8 +14,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.enums import UserRole, Difficulty
-from app.database import Base
+from src.enums import UserRole, Difficulty
+from src.database import Base
 
 
 class User(Base):
@@ -49,14 +49,14 @@ class User(Base):
 
 class RefreshSession(Base):
     __tablename__ = "refresh_sessions"
-    __table_args__ = (
-        CheckConstraint("expires_at > created_at", name="chk_expires_at_future"),
-        Index(
-            "ix_refresh_sessions_active",
-            "user_id",
-            postgresql_where=text("expires_at > now()"),
-        ),
-    )
+    # __table_args__ = (
+    #     CheckConstraint("expires_at > created_at", name="chk_expires_at_future"),
+    #     Index(
+    #         "ix_refresh_sessions_active",
+    #         "user_id",
+    #         postgresql_where=text("expires_at > now()"),
+    #     ),
+    # )
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
@@ -113,10 +113,10 @@ class Task(Base):
 
     category: Mapped[Category] = relationship(back_populates="tasks")
     attachments: Mapped[list[TaskAttachment]] = relationship(
-        back_populates="tasks", cascade="all, delete-orphan"
+        back_populates="task", cascade="all, delete-orphan"
     )
     solves: Mapped[list[Solve]] = relationship(
-        back_populates="tasks", cascade="all, delete-orphan"
+        back_populates="task", cascade="all, delete-orphan"
     )
 
 

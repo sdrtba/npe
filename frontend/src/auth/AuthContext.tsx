@@ -13,6 +13,7 @@ type AuthContextValue = {
   user: User | null
   loading: boolean
   isAuth: boolean
+  register: (username: string, email: string, password: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -36,6 +37,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } catch {
       setUser(null)
     }
+  }
+
+  const register = async (username: string, email: string, password: string) => {
+    const { data } = await api.post<{ accessToken: string }>('/auth/register', { username, email, password })
+    setAccessToken(data.accessToken)
+    await refreshProfile()
   }
 
   const login = async (email: string, password: string) => {
@@ -68,6 +75,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       user,
       loading,
       isAuth: !!user,
+      register,
       login,
       logout,
       refreshProfile,

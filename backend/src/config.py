@@ -10,7 +10,8 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str
     ALGORITHM: str
-    TOKEN_EXPIRATION_MINUTES: int
+    ACCESS_TOKEN_EXP_MIN: int
+    REFRESH_TOKEN_EXP_MIN: int
 
     DEBUG: bool = False
 

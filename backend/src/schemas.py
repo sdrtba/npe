@@ -2,10 +2,19 @@ from __future__ import annotations
 from typing import Annotated
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr
-from app.enums import UserRole, Difficulty
+from src.enums import UserRole, Difficulty
+
+
+class TokenResponse(BaseModel):
+    accessToken: str
 
 
 # ---- User ----
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: Annotated[SecretStr, Field(min_length=8)]
+
+
 class UserBase(BaseModel):
     username: Annotated[str, Field(min_length=3, max_length=64)]
     email: EmailStr
@@ -57,7 +66,7 @@ class CategoryRead(CategoryBase):
 # ---- Task & Attachment ----
 class TaskAttachmentBase(BaseModel):
     filename: Annotated[str, Field(min_length=1, max_length=256)]
-    sha256: Annotated[str, Field(regex=r"^[0-9a-f]{64}$")]
+    sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 
 
 class TaskAttachmentRead(TaskAttachmentBase):
