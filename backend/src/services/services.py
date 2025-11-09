@@ -1,41 +1,25 @@
-import os
-import secrets
-import jwt
 import datetime
-
-from passlib.hash import bcrypt
-from passlib.exc import InvalidTokenError
-from fastapi import HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from src.config import settings
-from src.models import User, RefreshSession
-from src.schemas import UserCreate, UserRead, LoginRequest
-from src.database import Base, SessionLocal, engine
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
-
-
-def create_database():
-    return Base.metadata.create_all(bind=engine)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from src.core.config import settings
+from src.models.models import User, RefreshSession
+from src.schemas.schemas import UserCreate, LoginRequest
+from src.core.security import (
+    hash_password,
+    create_access_token,
+    create_refresh_token,
+    deocde_access_token,
+)
 
 
-async def get_db_user(email: str, db: Session):
+async def get_db_user(email: str, db: Session) -> User | None:
     db_user = db.query(User).filter(User.email == email).first()
     return db_user
 
 
-async def create_db_user(user: UserCreate, db: Session):
+async def create_db_user(user: UserCreate, db: Session) -> User:
     exists = (
         db.query(User)
         .filter((User.username == user.username) | (User.email == user.email))
@@ -46,7 +30,7 @@ async def create_db_user(user: UserCreate, db: Session):
 
     db_user = User(
         username=user.username,
-        password_hash=bcrypt.hash(user.password.get_secret_value()),
+        password_hash=hash_password(user.password.get_secret_value()),
         email=user.email,
         role=user.role,
     )
@@ -58,38 +42,33 @@ async def create_db_user(user: UserCreate, db: Session):
         db.rollback()
         raise HTTPException(status_code=409, detail="Username or email already exists")
     return db_user
-    return db_user
 
 
-async def login_user(email: str, password: str, db: Session):
-    db_user = await get_db_user(email=email, db=db)
+async def login_user(login: LoginRequest, db: Session) -> User:
+    db_user = await get_db_user(email=login.email, db=db)
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
 
-    if not db_user.verify_password(password):
-        raise HTTPException(
-            status_code=401, detail="Invalid Credentials(from services)"
-        )
+    if not db_user.verify_password(login.password.get_secret_value()):
+        raise HTTPException(status_code=401, detail="Invalid Credentials")
 
     return db_user
 
 
-async def create_tokens(user: User, db: Session) -> dict:
-    access_payload = {
+async def create_tokens(user: User, db: Session) -> dict[str, str]:
+    payload = {
         "id": user.id,
         "email": user.email,
         "exp": datetime.datetime.now(datetime.UTC)
         + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXP_MIN),
     }
 
-    access_token = jwt.encode(
-        access_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
-    refresh_token = secrets.token_hex(32)
+    access_token = create_access_token(payload)
+    refresh_token, refresh_token_hash = create_refresh_token()
 
     session = RefreshSession(
         user_id=user.id,
-        token_hash=bcrypt.hash(refresh_token).encode("utf-8"),
+        token_hash=refresh_token_hash,
         expires_at=datetime.datetime.now(datetime.UTC)
         + datetime.timedelta(minutes=settings.REFRESH_TOKEN_EXP_MIN),
     )
@@ -98,6 +77,15 @@ async def create_tokens(user: User, db: Session) -> dict:
     db.refresh(session)
 
     return {"access_token": access_token, "refresh_token": refresh_token}
+
+
+async def logout(cookie: str, db: Session) -> None:
+    payload = deocde_access_token(cookie)
+    session = db.query(RefreshSession).filter(User.email == payload["email"]).first()
+
+    if session:
+        db.delete(session)
+        db.commit()
 
 
 # async def get_current_user(

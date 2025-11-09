@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXP_MIN: int
     REFRESH_TOKEN_EXP_MIN: int
+    CORS_ORIGINS: list[str] = []
 
     DEBUG: bool = False
 

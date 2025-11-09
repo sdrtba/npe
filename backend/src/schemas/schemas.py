@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Annotated
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr
-from src.enums import UserRole, Difficulty
+from src.core.enums import UserRole, Difficulty
 
 
 class TokenResponse(BaseModel):

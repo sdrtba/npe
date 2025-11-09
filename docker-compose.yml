@@ -75,3 +75,19 @@ services:
       interval: 10s
       timeout: 3s
       retries: 15
+
+
+  adminer:
+    image: adminer:latest
+    networks: [public, internal]
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "8080:8080"

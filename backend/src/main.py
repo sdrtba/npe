@@ -1,26 +1,23 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routes import router
-from src.services import create_database
+
+from src.api.routes import router
+from src.core.database import create_tables
+from src.core.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_database()
+    create_tables()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
 
-origins = [
-    "http://localhost:3000",
-    "http://localhost",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

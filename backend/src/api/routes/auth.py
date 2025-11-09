@@ -1,17 +1,14 @@
 from sqlalchemy.orm import Session
-from fastapi import Cookie, APIRouter, Depends, HTTPException, Response, Request
-from fastapi.security import OAuth2PasswordRequestForm
-from src.schemas import UserCreate, UserRead, TokenResponse, LoginRequest
-from src.services import (
-    get_db,
-    get_db_user,
+from fastapi import APIRouter, Depends, Response, Cookie
+
+from src.core.config import settings
+from src.schemas.schemas import UserCreate, TokenResponse, LoginRequest
+from src.core.database import get_db
+from src.services.services import (
     create_db_user,
     create_tokens,
     login_user,
-    # get_current_user,
-    # remove_session,
 )
-from src.config import settings
 
 
 router = APIRouter()
@@ -22,11 +19,11 @@ router = APIRouter()
     response_model=TokenResponse,
 )
 async def register_user(
-    user: UserCreate, response: Response = None, db: Session = Depends(get_db)
+    user: UserCreate, response: Response, db: Session = Depends(get_db)
 ):
     db_user = await create_db_user(user, db)
 
-    tokens = await create_tokens(db_user, db=db)
+    tokens = await create_tokens(db_user, db)
     response.set_cookie(
         key="refreshToken",
         value=tokens["refresh_token"],
@@ -42,19 +39,10 @@ async def register_user(
     "/login",
     response_model=TokenResponse,
 )
-async def login(
-    response: Response,
-    login: LoginRequest,
-    db: Session = Depends(get_db),
-):
-    db_user = await login_user(
-        email=login.email, password=login.password.get_secret_value(), db=db
-    )
+async def login(response: Response, login: LoginRequest, db: Session = Depends(get_db)):
+    db_user = await login_user(login=login, db=db)
 
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Invalid Credentials(from router)")
-
-    tokens = await create_tokens(db_user, db=db)
+    tokens = await create_tokens(db_user, db)
     response.set_cookie(
         key="refreshToken",
         value=tokens["refresh_token"],
@@ -66,18 +54,19 @@ async def login(
     return TokenResponse(accessToken=tokens["access_token"])
 
 
-# @router.post(
-#     "/logout",
-#     response_model=TokenResponse,
-# )
-# async def logout(
-#     response: Response,
-#     db: Session = Depends(get_db),
-#     user: UserRead = Depends(get_current_user),
-# ):
-#     await remove_session(user=user, db=db)
-#     response.delete_cookie(key="refreshToken")
-#     return TokenResponse(accessToken=None)
+# logout using cookie in logout
+@router.post(
+    "/logout",
+    response_model=TokenResponse,
+)
+async def logout(
+    response: Response,
+    db: Session = Depends(get_db),
+    cookie: str | None = Cookie(default=None, alias="accessToken"),
+):
+    await logout(cookie=cookie, db=db)
+    response.delete_cookie(key="refreshToken")
+    return TokenResponse(accessToken=None)
 
 
 # @router.get(
