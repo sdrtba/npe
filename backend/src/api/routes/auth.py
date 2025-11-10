@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Response, Cookie
 
 from src.core.config import settings
-from src.api.dependencies import SessionDep
+from src.api.dependencies import SessionDep, UserSrvDep
 from src.schemas.schemas import UserCreate, TokenResponse, LoginRequest
 from src.services.services import (
     create_db_user,
     create_tokens,
     login_user,
 )
-
 
 router = APIRouter()
 
@@ -17,8 +16,13 @@ router = APIRouter()
     "/register",
     response_model=TokenResponse,
 )
-async def register_user(user: UserCreate, response: Response, db: SessionDep):
-    db_user = await create_db_user(user, db)
+async def register_user(
+    user: UserCreate,
+    response: Response,
+    db: SessionDep,
+    user_service: UserSrvDep,
+):
+    db_user = await create_db_user(user, db, user_service)
 
     tokens = await create_tokens(db_user, db)
     response.set_cookie(

@@ -9,10 +9,19 @@ from src.core.config import settings
 from src.models.models import User
 from src.core.database import get_db
 from src.core.enums import UserRole
+from src.services.users import UsersService
+from src.repository.users import UsersRepository
+
 
 security = HTTPBearer()
 
+
+def user_service():
+    return UsersService(UsersRepository())
+
+
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
+UserSrvDep = Annotated[UsersService, Depends(user_service)]
 
 
 async def get_current_user(

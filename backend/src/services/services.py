@@ -2,7 +2,6 @@ import datetime
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
 from src.models.models import User, RefreshSession
@@ -13,6 +12,8 @@ from src.core.security import (
     create_refresh_token,
     deocde_access_token,
 )
+from src.repository.users import UsersRepository
+from src.services.users import UsersService
 
 
 async def get_db_user(email: str, db: AsyncSession) -> User | None:
@@ -22,29 +23,48 @@ async def get_db_user(email: str, db: AsyncSession) -> User | None:
     return db_user
 
 
-async def create_db_user(user: UserCreate, db: AsyncSession) -> User:
-    stmt = select(User).filter(
-        (User.username == user.username) | (User.email == user.email)
-    )
-    result = await db.execute(stmt)
-    exists = result.scalars().first()
-    if exists:
+async def create_db_user(
+    user: UserCreate, db: AsyncSession, user_service: UsersService
+) -> User:
+    user_db = await user_service.check_user_exists(user.username, user.email)
+
+    # res = await UsersRepository().find_all(
+    #     custom_filter=((User.username == user.username) | (User.email == user.email))
+    # )
+
+    # stmt = select(User).filter(
+    #     (User.username == user.username) | (User.email == user.email)
+    # )
+    # result = await db.execute(stmt)
+    # exists = result.scalars().first()
+    if user_db:
         raise HTTPException(status_code=409, detail="Username or email already exists")
 
-    db_user = User(
-        username=user.username,
-        password_hash=hash_password(user.password.get_secret_value()),
-        email=user.email,
-        role=user.role,
-    )
-    db.add(db_user)
-    try:
-        await db.commit()
-        await db.refresh(db_user)
-    except IntegrityError:
-        await db.rollback()
-        raise HTTPException(status_code=409, detail="Username or email already exists")
-    return db_user
+    # res = await UsersRepository().add_one(
+    #     {
+    #         "username": user.username,
+    #         "password_hash": hash_password(user.password.get_secret_value()),
+    #         "email": user.email,
+    #         "role": user.role,
+    #     }
+    # )
+    user_db = await user_service.add_user(user)
+    return user_db
+
+    # db_user = User(
+    #     username=user.username,
+    #     password_hash=hash_password(user.password.get_secret_value()),
+    #     email=user.email,
+    #     role=user.role,
+    # )
+    # db.add(db_user)
+    # try:
+    #     await db.commit()
+    #     await db.refresh(db_user)
+    # except IntegrityError:
+    #     await db.rollback()
+    #     raise HTTPException(status_code=409, detail="Username or email already exists")
+    # return user_db
 
 
 async def login_user(login: LoginRequest, db: AsyncSession) -> User:

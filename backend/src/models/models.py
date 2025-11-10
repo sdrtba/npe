@@ -7,6 +7,7 @@ from sqlalchemy import Enum, String, ForeignKey, LargeBinary, DateTime, func
 from src.core.database import Base
 from src.core.enums import UserRole, Difficulty
 from src.core.security import verify_password, verify_flag
+from src.schemas.schemas import UserRead, LoginRequest
 
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
@@ -48,6 +49,16 @@ class User(Base):
 
     def verify_password(self, password: str) -> bool:
         return verify_password(password, self.password_hash)
+
+    def to_read_model(self) -> UserRead:
+        return UserRead(
+            id=self.id,
+            username=self.username,
+            email=self.email,
+            role=self.role.value,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
 
 
 class RefreshSession(Base):
