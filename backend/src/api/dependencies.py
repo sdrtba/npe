@@ -1,14 +1,18 @@
 import jwt
+from typing import Annotated
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from src.core.config import settings
 from src.models.models import User
-from src.services.services import get_db
+from src.core.database import get_db
 from src.core.enums import UserRole
 
 security = HTTPBearer()
+
+SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
 
 async def get_current_user(

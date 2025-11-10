@@ -1,6 +1,7 @@
 import datetime
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
@@ -14,17 +15,19 @@ from src.core.security import (
 )
 
 
-async def get_db_user(email: str, db: Session) -> User | None:
-    db_user = db.query(User).filter(User.email == email).first()
+async def get_db_user(email: str, db: AsyncSession) -> User | None:
+    stmt = select(User).filter(User.email == email)
+    result = await db.execute(stmt)
+    db_user = result.scalars().first()
     return db_user
 
 
-async def create_db_user(user: UserCreate, db: Session) -> User:
-    exists = (
-        db.query(User)
-        .filter((User.username == user.username) | (User.email == user.email))
-        .first()
+async def create_db_user(user: UserCreate, db: AsyncSession) -> User:
+    stmt = select(User).filter(
+        (User.username == user.username) | (User.email == user.email)
     )
+    result = await db.execute(stmt)
+    exists = result.scalars().first()
     if exists:
         raise HTTPException(status_code=409, detail="Username or email already exists")
 
@@ -36,15 +39,15 @@ async def create_db_user(user: UserCreate, db: Session) -> User:
     )
     db.add(db_user)
     try:
-        db.commit()
-        db.refresh(db_user)
+        await db.commit()
+        await db.refresh(db_user)
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(status_code=409, detail="Username or email already exists")
     return db_user
 
 
-async def login_user(login: LoginRequest, db: Session) -> User:
+async def login_user(login: LoginRequest, db: AsyncSession) -> User:
     db_user = await get_db_user(email=login.email, db=db)
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
@@ -55,7 +58,7 @@ async def login_user(login: LoginRequest, db: Session) -> User:
     return db_user
 
 
-async def create_tokens(user: User, db: Session) -> dict[str, str]:
+async def create_tokens(user: User, db: AsyncSession) -> dict[str, str]:
     payload = {
         "id": user.id,
         "email": user.email,
@@ -73,19 +76,21 @@ async def create_tokens(user: User, db: Session) -> dict[str, str]:
         + datetime.timedelta(minutes=settings.REFRESH_TOKEN_EXP_MIN),
     )
     db.add(session)
-    db.commit()
-    db.refresh(session)
+    await db.commit()
+    await db.refresh(session)
 
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
-async def logout(cookie: str, db: Session) -> None:
+async def logout(cookie: str, db: AsyncSession) -> None:
     payload = deocde_access_token(cookie)
-    session = db.query(RefreshSession).filter(User.email == payload["email"]).first()
+    stmt = select(RefreshSession).filter(User.email == payload["email"])
+    result = await db.execute(stmt)
+    session = result.scalars().first()
 
     if session:
         db.delete(session)
-        db.commit()
+        await db.commit()
 
 
 # async def get_current_user(

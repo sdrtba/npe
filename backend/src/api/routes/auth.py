@@ -1,9 +1,8 @@
-from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, Response, Cookie
+from fastapi import APIRouter, Response, Cookie
 
 from src.core.config import settings
+from src.api.dependencies import SessionDep
 from src.schemas.schemas import UserCreate, TokenResponse, LoginRequest
-from src.core.database import get_db
 from src.services.services import (
     create_db_user,
     create_tokens,
@@ -18,9 +17,7 @@ router = APIRouter()
     "/register",
     response_model=TokenResponse,
 )
-async def register_user(
-    user: UserCreate, response: Response, db: Session = Depends(get_db)
-):
+async def register_user(user: UserCreate, response: Response, db: SessionDep):
     db_user = await create_db_user(user, db)
 
     tokens = await create_tokens(db_user, db)
@@ -39,7 +36,7 @@ async def register_user(
     "/login",
     response_model=TokenResponse,
 )
-async def login(response: Response, login: LoginRequest, db: Session = Depends(get_db)):
+async def login(response: Response, login: LoginRequest, db: SessionDep):
     db_user = await login_user(login=login, db=db)
 
     tokens = await create_tokens(db_user, db)
@@ -61,7 +58,7 @@ async def login(response: Response, login: LoginRequest, db: Session = Depends(g
 )
 async def logout(
     response: Response,
-    db: Session = Depends(get_db),
+    db: SessionDep,
     cookie: str | None = Cookie(default=None, alias="accessToken"),
 ):
     await logout(cookie=cookie, db=db)

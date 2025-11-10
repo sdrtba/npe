@@ -1,42 +1,49 @@
-from typing import Generator
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from typing import AsyncGenerator
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+    AsyncEngine,
+)
 from src.core.config import settings
-from sqlalchemy.pool import QueuePool
 
 
-engine = create_engine(
-    url=settings.DB_URL_psycopg,
+engine: AsyncEngine = create_async_engine(
+    url=settings.DB_URL_asyncpg,
     echo=settings.DEBUG,
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
     pool_recycle=3600,
-    poolclass=QueuePool,
 )
 
 
-SessionLocal = sessionmaker(
+SessionLocal: AsyncSession = async_sessionmaker(
     bind=engine,
     autocommit=False,
     autoflush=False,
     expire_on_commit=False,
 )
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
 
 
-def create_tables():
-    Base.metadata.create_all(bind=engine)
+async def create_tables() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
-def drop_tables():
-    Base.metadata.drop_all(bind=engine)
+async def drop_tables() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
