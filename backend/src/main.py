@@ -2,18 +2,22 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import router
-from src.core.database import create_tables
+from src.routes import router
+from src.core.database import create_tables, drop_tables
 from src.core.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await drop_tables()
     await create_tables()
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    swagger_ui_parameters={"persistAuthorization": True},
+)
 
 app.add_middleware(
     CORSMiddleware,

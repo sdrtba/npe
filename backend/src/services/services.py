@@ -4,15 +4,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
-from src.models.models import User, RefreshSession
-from src.schemas.schemas import UserCreate, LoginRequest
+from src.models import User, RefreshSession
+from src.schemas import UserCreate, LoginRequest
 from src.core.security import (
-    hash_password,
     create_access_token,
     create_refresh_token,
-    deocde_access_token,
+    decode_access_token,
 )
-from src.repository.users import UsersRepository
 from src.services.users import UsersService
 
 
@@ -103,7 +101,7 @@ async def create_tokens(user: User, db: AsyncSession) -> dict[str, str]:
 
 
 async def logout(cookie: str, db: AsyncSession) -> None:
-    payload = deocde_access_token(cookie)
+    payload = decode_access_token(cookie)
     stmt = select(RefreshSession).filter(User.email == payload["email"])
     result = await db.execute(stmt)
     session = result.scalars().first()

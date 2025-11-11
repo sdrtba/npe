@@ -7,23 +7,6 @@ volumes:
   pg_data:
 
 services:
-  nginx:
-    image: nginx:1.27-alpine
-    networks: [public]
-    depends_on:
-      backend: { condition: service_healthy }
-      frontend: { condition: service_healthy }
-    ports:
-      - "80:80"
-      - "8000:8000"
-      - "3000:3000"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost/healthz || exit 1"]
-      interval: 10s
-      retries: 5
-
   db:
     image: postgres:16-alpine
     networks: [internal]
@@ -41,24 +24,16 @@ services:
       timeout: 3s
       retries: 10
 
-  # redis:
-  #   image: redis:7-alpine
-  #   networks: [internal]
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 5s
-  #     timeout: 2s
-  #     retries: 10
-
   backend:
     build:
       context: ./backend
     networks: [internal, public]
     depends_on:
       db: { condition: service_healthy }
-      # redis: { condition: service_started }
     env_file:
       - ./.env
+    ports:
+      - "8000:8000"
     command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/health || exit 1"]
@@ -71,13 +46,33 @@ services:
       context: ./frontend
     networks: [public]
     depends_on:
-      backend: { condition: service_started }
+      backend: { condition: service_healthy }
+    env_file:
+      - ./.env
+    ports:
+      - "3000:3000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:3000 || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 15
 
+  nginx:
+    image: nginx:1.27-alpine
+    networks: [public]
+    depends_on:
+      backend: { condition: service_healthy }
+      frontend: { condition: service_healthy }
+    ports:
+      - "80:80"
+      - "8000:8000"
+      - "3000:3000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    # healthcheck:
+    #   test: ["CMD", "curl", "-fsS", "http://localhost/healthz || exit 1"]
+    #   interval: 10s
+    #   retries: 5
 
   adminer:
     image: adminer:latest
@@ -86,10 +81,5 @@ services:
       db: { condition: service_healthy }
     environment:
       ADMINER_DEFAULT_SERVER: db
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080 || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
     ports:
       - "8080:8080"
