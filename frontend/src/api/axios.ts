@@ -1,134 +1,128 @@
 import axios from 'axios'
-import type { AxiosError, AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
+import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
 
+// ---- Token in-memory and headers---------------------------------
 let accessToken: string | null = null
 
 export const getAccessToken = () => accessToken
-export const setAccessToken = (t: string | null) => {
-  accessToken = t
+export const setAccessToken = (token: string | null) => {
+  accessToken = token
 }
 
+function attachAuth(config: AxiosRequestConfig, token: string) {
+  config.headers = config.headers ?? {}
+  ;(config.headers as Record<string, string>).Authorization = `Bearer ${token}`
+}
+
+// ---- Error normalization ---------------------------------------------------------
+export type ApiError = { message: string; status?: number; code?: string }
+
+export const toApiError = (err: unknown, fallback = 'Произошла ошибка'): ApiError => {
+  const ax = err as AxiosError | undefined
+  const res = ax?.response
+  const status = res?.status
+  const data = res?.data as any
+
+  const serverMessage =
+    data && typeof data === 'object' && 'message' in data && typeof data.message === 'string'
+      ? (data.message as string)
+      : undefined
+
+  const code = (ax?.code ?? (typeof data?.code === 'string' ? data.code : undefined)) || undefined
+
+  return { message: serverMessage || ax?.message || fallback, status, code }
+}
+
+export class AuthExpiredError extends Error {
+  constructor(message = 'Session expired') {
+    super(message)
+    this.name = 'AuthExpiredError'
+  }
+}
+
+// ---- Axios instances -------------------------------------------------------------
+const BASE_URL = import.meta?.env?.VITE_API_URL || '/api'
+
 export const api: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   withCredentials: true,
   timeout: 15000,
-  headers: { Accept: 'application/json' },
 })
 
 // A raw axios instance without interceptors for token refresh
 export const raw: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   withCredentials: true,
   timeout: 15000,
-  headers: { Accept: 'application/json' },
 })
 
-// Add a request interceptor to include the access token in headers
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (accessToken) {
-    config.headers = config.headers ?? {}
-    config.headers.Authorization = `Bearer ${accessToken}`
-  }
+// ---- Refresh: single-flight ------------------------------------------------------------
+type RetryableConfig = AxiosRequestConfig & { _retry?: boolean }
+let refreshPromise: Promise<string | null> | null = null
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise
+  refreshPromise = (async () => {
+    try {
+      const { data } = await raw.post<{ accessToken?: string }>('/auth/refresh')
+      const newToken = data?.accessToken ?? null
+      setAccessToken(newToken)
+      return newToken
+    } catch (e) {
+      setAccessToken(null)
+      throw e
+    } finally {
+      refreshPromise = null
+    }
+  })()
+  return refreshPromise
+}
+
+// ---- Interceptors ----------------------------------------------------------------
+api.interceptors.request.use((config) => {
+  const token = getAccessToken()
+  if (token) attachAuth(config, token)
   return config
 })
 
-// Queue to hold requests while refreshing token
-let isRefreshing: boolean = false
-type QueueEntry = {
-  resolve: (token: string | null) => void
-  reject: (err: any) => void
-}
-let queue: QueueEntry[] = []
-const flushQueue = (err: any, token: string | null = null) => {
-  queue.forEach((p) => (err ? p.reject(err) : p.resolve(token)))
-  queue = []
-}
-
-// Add a response interceptor to handle 401 errors and refresh token
 api.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {
     const status = err.response?.status
-    const original = err.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined
+    const original = err.config as RetryableConfig | undefined
+    if (!original) return Promise.reject(err)
 
-    if (status !== 401 || !original || original._retry) {
+    // не трогаем не-401 и /auth-роуты
+    const url = (original.url || '').toLowerCase()
+    const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh')
+    if (status !== 401 || isAuthRoute) {
       return Promise.reject(err)
+    }
+
+    // уже пробовали
+    if (original._retry) {
+      return Promise.reject(new AuthExpiredError())
     }
     original._retry = true
 
-    // If token is refreshing, queue the request
-    if (isRefreshing) {
-      return new Promise((fulfill, fail) => {
-        queue.push({
-          resolve: (newToken) => {
-            if (newToken && original.headers) {
-              original.headers.Authorization = `Bearer ${newToken}`
-            }
-            fulfill(api(original))
-          },
-          reject: fail,
-        })
-      })
-    }
-
-    isRefreshing = true
     try {
-      const { data } = await raw.post('/auth/refresh-token')
-      const newToken = data?.accessToken as string | null
-      if (!newToken) {
-        throw new Error('No access token in refresh response')
-      }
+      const token = await refreshAccessToken()
+      if (!token) throw new AuthExpiredError()
 
-      setAccessToken(newToken)
-      flushQueue(null, newToken)
-
-      // Retry the original request with new token
-      if (original.headers) {
-        original.headers.Authorization = `Bearer ${newToken}`
-      }
+      attachAuth(original, token)
       return api(original)
-    } catch (refreshErr) {
-      // Refresh token failed, clear access token and reject all queued requests
-      setAccessToken(null)
-      flushQueue(refreshErr, null)
-      return Promise.reject(refreshErr)
-    } finally {
-      isRefreshing = false
+    } catch {
+      return Promise.reject(new AuthExpiredError())
     }
   }
 )
 
-export type ApiError = {
-  status?: number
-  code?: string
-  message: string
-  details?: unknown
-}
-export const toApiError = (err: unknown): ApiError => {
-  if (axios.isAxiosError(err)) {
-    const status = err.response?.status
-    const data = err.response?.data as any
-    return {
-      status,
-      code: data?.code || err.code,
-      message: data?.message || err.message || 'Request failed',
-      details: data,
-    }
-  }
-  return { message: (err as any)?.message ?? 'Unknown error' }
-}
-
-// Bootstrap function to refresh access token on app start
-export const bootstrapAccessToken = async (): Promise<boolean> => {
-  if (accessToken) return true
+// ---- Bootstrap at app start ------------------------------------------------------
+export const bootstrapAccessToken = async (): Promise<void> => {
+  if (accessToken) return
   try {
-    const { data } = await raw.post('/auth/refresh-token')
-    const newToken = data?.accessToken as string | null
-    if (!newToken) return false
-    setAccessToken(newToken)
-    return true
+    await refreshAccessToken()
   } catch {
     setAccessToken(null)
-    return false
   }
 }

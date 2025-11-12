@@ -1,86 +1,150 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { api, setAccessToken, bootstrapAccessToken } from '@/api/axios'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { api, setAccessToken, bootstrapAccessToken, toApiError, AuthExpiredError } from '@/api/axios'
 import type { FC, PropsWithChildren } from 'react'
 
 export type User = {
   id: string
+  username: string
   email: string
-  name?: string
-  roles?: string[]
 }
+
+export type AuthError = {
+  message: string
+  code?: string
+}
+
+type Status = 'idle' | 'authenticating' | 'authenticated' | 'guest'
 
 type AuthContextValue = {
   user: User | null
   loading: boolean
+  status: Status
   isAuth: boolean
+  error: AuthError | null
+  setError: (error: AuthError | null) => void
+  refreshProfile: () => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+
 export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('AuthContext not found')
-  return context
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
 }
 
 export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState<Status>('idle')
+  const [error, setError] = useState<AuthError | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
-  const refreshProfile = async () => {
+  const loading = status === 'idle' || status === 'authenticating'
+
+  const setErrorSafe = useCallback((err: AuthError | null) => setError(err), [])
+
+  const refreshProfile = useCallback(async () => {
     try {
       const { data } = await api.get<User>('/auth/me')
       setUser(data)
-    } catch {
+      setError(null)
+      setStatus('authenticated')
+    } catch (err: unknown) {
+      if (err instanceof AuthExpiredError) {
+        setAccessToken(null)
+      }
+
+      const apiErr = toApiError(err, 'Ошибка загрузки профиля')
+      setError({ message: apiErr.message, code: apiErr.code })
       setUser(null)
+      setStatus('guest')
     }
-  }
+  }, [])
 
-  const register = async (username: string, email: string, password: string) => {
-    const { data } = await api.post<{ accessToken: string }>('/auth/register', { username, email, password })
-    setAccessToken(data.accessToken)
-    await refreshProfile()
-  }
+  const register = useCallback(
+    async (username: string, email: string, password: string) => {
+      setStatus('authenticating')
+      try {
+        setError(null)
+        const { data } = await api.post<{ accessToken: string }>('/auth/register', { username, email, password })
+        setAccessToken(data.accessToken)
+        await refreshProfile()
+      } catch (err: unknown) {
+        const apiErr = toApiError(err, 'Ошибка регистрации')
+        setError({ message: apiErr.message, code: apiErr.code })
+        setStatus('guest')
+        throw err
+      }
+    },
+    [refreshProfile]
+  )
 
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post<{ accessToken: string }>('/auth/login', { email, password })
-    setAccessToken(data.accessToken)
-    await refreshProfile()
-  }
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setStatus('authenticating')
+      try {
+        setError(null)
+        const { data } = await api.post<{ accessToken: string }>('/auth/login', { email, password })
+        setAccessToken(data.accessToken)
+        await refreshProfile()
+      } catch (err: unknown) {
+        const apiErr = toApiError(err, 'Ошибка входа')
+        setError({ message: apiErr.message, code: apiErr.code })
+        setStatus('guest')
+        throw err
+      }
+    },
+    [refreshProfile]
+  )
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout')
-    } catch {}
-    setAccessToken(null)
-    setUser(null)
-  }
+    } finally {
+      setAccessToken(null)
+      setUser(null)
+      setError(null)
+      setStatus('guest')
+    }
+  }, [])
 
   useEffect(() => {
+    let mounted = true
     ;(async () => {
       try {
+        setStatus('authenticating')
         await bootstrapAccessToken()
-        await refreshProfile()
+        if (mounted) {
+          await refreshProfile()
+        }
       } finally {
-        setLoading(false)
+        if (mounted && status === 'idle') {
+          setStatus((prev) => (prev === 'idle' ? 'guest' : prev))
+        }
       }
     })()
-  }, [])
+    return () => {
+      mounted = false
+    }
+  }, [refreshProfile])
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       loading,
-      isAuth: !!user,
+      status,
+      isAuth: status === 'authenticated',
+      error,
+      setError: setErrorSafe,
+      refreshProfile,
       register,
       login,
       logout,
-      refreshProfile,
     }),
-    [user, loading]
+    [user, loading, status, error, setErrorSafe, refreshProfile, register, login, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
