@@ -17,20 +17,34 @@ function attachAuth(config: AxiosRequestConfig, token: string) {
 // ---- Error normalization ---------------------------------------------------------
 export type ApiError = { message: string; status?: number; code?: string }
 
-export const toApiError = (err: unknown, fallback = 'Произошла ошибка'): ApiError => {
+export const toApiError = (err: unknown, customMessage?: string, fallback?: string): ApiError => {
   const ax = err as AxiosError | undefined
   const res = ax?.response
   const status = res?.status
   const data = res?.data as any
 
-  const serverMessage =
-    data && typeof data === 'object' && 'message' in data && typeof data.message === 'string'
-      ? (data.message as string)
-      : undefined
+  let serverMessage: string | undefined
+
+  if (data && typeof data === 'object') {
+    if (typeof data.message === 'string') {
+      serverMessage = data.message
+    } else if (typeof data.detail === 'string') {
+      serverMessage = data.detail
+    } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+      const first = data.detail[0]
+      if (typeof first === 'string') {
+        serverMessage = first
+      } else if (first && typeof first === 'object' && typeof first.msg === 'string') {
+        serverMessage = first.msg
+      }
+    }
+  }
 
   const code = (ax?.code ?? (typeof data?.code === 'string' ? data.code : undefined)) || undefined
 
-  return { message: serverMessage || ax?.message || fallback, status, code }
+  const message = customMessage ?? serverMessage ?? fallback ?? ax?.message ?? 'Error'
+
+  return { message, status, code }
 }
 
 export class AuthExpiredError extends Error {

@@ -6,6 +6,7 @@ export type User = {
   id: string
   username: string
   email: string
+  roles?: [string]
 }
 
 export type AuthError = {
@@ -91,7 +92,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setAccessToken(data.accessToken)
         await refreshProfile()
       } catch (err: unknown) {
-        const apiErr = toApiError(err, 'Ошибка входа')
+        const apiErr = toApiError(err)
         setError({ message: apiErr.message, code: apiErr.code })
         setStatus('guest')
         throw err

@@ -1,20 +1,26 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthContext'
+import { AuthModal } from '@/components/AuthModal'
 import styles from '@/styles/Navbar.module.css'
-import { useState } from 'react'
-import { Login } from '@/pages/Login'
-import { Register } from '@/pages/Register'
 
 export const Navbar = () => {
   const { user, logout } = useAuth()
+  const [showAuth, setShowAuth] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const navigate = useNavigate()
-  const [showLogin, setShowLogin] = useState(false)
-  const [showRegister, setShowRegister] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/')
   }
+
+  const openLogin = () => {
+    setAuthMode('login')
+    setShowAuth(true)
+  }
+
+  const isActive = (path: string) => location.pathname === path
 
   return (
     <nav className={styles.navbar}>
@@ -26,10 +32,18 @@ export const Navbar = () => {
         <div className={styles.menu}>
           {user ? (
             <>
-              <Link to="/tasks" className={styles.link}>
+              <Link
+                to="/tasks"
+                // className={styles.link}
+                className={`${styles.link} ${isActive('/tasks') ? styles.active : ''}`}
+              >
                 Задачи
               </Link>
-              <Link to="/profile" className={styles.link}>
+              <Link
+                to="/profile"
+                // className={styles.link}
+                className={`${styles.link} ${isActive('/profile') ? styles.active : ''}`}
+              >
                 Профиль
               </Link>
               <span className={styles.username}>{user.username}</span>
@@ -39,18 +53,15 @@ export const Navbar = () => {
             </>
           ) : (
             <>
-              <button onClick={() => setShowLogin(true)} className={styles.secondaryBtn}>
+              <button onClick={openLogin} className={styles.secondaryBtn}>
                 Войти
-              </button>
-              <button onClick={() => setShowRegister(true)} className={styles.primaryBtn}>
-                Регистрация
               </button>
             </>
           )}
         </div>
       </div>
-      <Login isOpen={showLogin} onClose={() => setShowLogin(false)} />
-      <Register isOpen={showRegister} onClose={() => setShowRegister(false)} />
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} initialMode={authMode} />
     </nav>
   )
 }

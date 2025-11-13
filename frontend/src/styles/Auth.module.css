@@ -1,9 +1,11 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  align-items: stretch;        /* все элементы, включая кнопку, на одну ширину */
 }
 
+/* Группы полей */
 .formGroup {
   display: flex;
   flex-direction: column;
@@ -35,6 +37,7 @@
   cursor: not-allowed;
 }
 
+/* Ошибка */
 .error {
   background-color: #fee2e2;
   color: #991b1b;
@@ -44,7 +47,13 @@
   border-left: 4px solid #dc2626;
 }
 
+/* Основная кнопка сабмита */
 .submitBtn {
+  width: 100%;               /* растягиваем под ширину инпутов */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -54,7 +63,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  margin-top: 0.5rem;
 }
 
 .submitBtn:hover:not(:disabled) {
@@ -70,4 +78,38 @@
 
 .submitBtn:active:not(:disabled) {
   transform: translateY(0);
+}
+
+/* Строка с переключателем "Нет аккаунта? Зарегистрироваться" */
+.switchRow {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Вторая "кнопка" как текстовая ссылка */
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  font: inherit;
+  color: #4f46e5;
+  cursor: pointer;
+  font-weight: 500;
+
+  transition: color 0.2s, transform 0.1s;
+}
+
+.linkBtn:hover {
+  color: #4338ca;
+  transform: translateY(-1px);
+}
+
+.linkBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
