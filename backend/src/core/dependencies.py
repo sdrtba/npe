@@ -7,7 +7,7 @@ from src.core.security import decode_access_token
 from src.models import User
 from src.core.database import get_db
 from src.repository import UnitOfWork
-from src.services import UsersService, SessionsService, TasksService
+from src.services import UsersService, SessionsService, TasksService, CategoriesService
 
 
 security = HTTPBearer(auto_error=False)
@@ -29,9 +29,14 @@ def get_tasks_service(uow: UnitOfWork = Depends(get_uow)):
     return TasksService(uow)
 
 
+def get_categories_service(uow: UnitOfWork = Depends(get_uow)):
+    return CategoriesService(uow)
+
+
 UserSrvDep = Annotated[UsersService, Depends(get_user_service)]
 SessionSrvDep = Annotated[SessionsService, Depends(get_session_service)]
 TaskSrvDep = Annotated[TasksService, Depends(get_tasks_service)]
+CategorySrvDep = Annotated[CategoriesService, Depends(get_categories_service)]
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
 

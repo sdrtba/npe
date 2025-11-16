@@ -1,9 +1,9 @@
 import hashlib
 import datetime
 
-from src.core.config import settings
 from src.schemas import UserRead
-from src.repository.uow import AbstractUnitOfWork
+from src.core.config import settings
+from src.utils.uow import AbstractUnitOfWork
 from src.core.security import create_access_token, create_refresh_token, hash_refresh_token
 
 
@@ -25,7 +25,7 @@ class SessionsService:
                 {
                     "user_id": user.id,
                     "refresh_token_hash": token_hash,
-                    "expires_at": datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=settings.REFRESH_TOKEN_EXP_MIN),
+                    "expires_at": datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=settings.REFRESH_TOKEN_EXP_SEC),
                 }
             )
             await self.uow.commit()

@@ -2,8 +2,8 @@ from __future__ import annotations
 from datetime import datetime
 from pydantic import BaseModel, Field, SecretStr
 
-from src.schemas.user import UserRead
 from src.core.enums import Difficulty
+from src.schemas.user import UserRead
 from src.schemas.base import ORMModel
 
 
@@ -65,7 +65,7 @@ class TaskListItem(ORMModel):
     name: str
     difficulty: Difficulty
     base_score: int
-    category: CategoryRead
+    category_id: int
 
 
 # Детальная задача: /tasks/{category}/{task_id}
@@ -74,8 +74,8 @@ class TaskRead(ORMModel, TaskBase):
     created_at: datetime
     updated_at: datetime
 
-    category: CategoryRead
-    attachments: list[TaskAttachmentRead] = []
+    category_id: int
+    # attachments: list[TaskAttachmentRead] = []
 
 
 # =========================

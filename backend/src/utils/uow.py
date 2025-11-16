@@ -2,15 +2,16 @@ from abc import ABC, abstractmethod
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import SessionLocal
-from src.repository.user import UserRepository
-from src.repository.session import SessionRepository
-from src.repository.task import TaskRepository
+from src.repository import UserRepository, SessionRepository, TaskRepository, CategoryRepository, AttachmentRepository, SolveRepository
 
 
 class AbstractUnitOfWork(ABC):
     users: UserRepository
     sessions: SessionRepository
     tasks: TaskRepository
+    categories: CategoryRepository
+    attachments: AttachmentRepository
+    solves: SolveRepository
 
     @abstractmethod
     def __init__(self):
@@ -43,6 +44,9 @@ class UnitOfWork(AbstractUnitOfWork):
         self.users = UserRepository(self.session)
         self.sessions = SessionRepository(self.session)
         self.tasks = TaskRepository(self.session)
+        self.categories = CategoryRepository(self.session)
+        self.attachments = AttachmentRepository(self.session)
+        self.solves = SolveRepository(self.session)
 
         return self
 

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXP_MIN: int
-    REFRESH_TOKEN_EXP_MIN: int
+    REFRESH_TOKEN_EXP_SEC: int
     CORS_ORIGINS: list[str] = []
 
     DEBUG: bool = False

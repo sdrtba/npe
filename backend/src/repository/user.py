@@ -1,6 +1,6 @@
 from src.models import User
-from src.repository.repository import SQLAlchemyRepository
+from src.utils.repository import SQLAlchemyRepository
 
 
-class UserRepository(SQLAlchemyRepository):
+class UserRepository(SQLAlchemyRepository[User]):
     model = User

@@ -1,7 +1,8 @@
 from fastapi import HTTPException
 from psycopg import IntegrityError
+
 from src.schemas import UserCreate, UserRead, LoginRequest
-from src.repository.uow import AbstractUnitOfWork
+from src.utils.uow import AbstractUnitOfWork
 from src.core.security import hash_password, verify_password
 
 
@@ -54,7 +55,7 @@ class UsersService:
 
     async def login_user(self, login: LoginRequest):
         async with self.uow:
-            user = await self.uow.users.find_one_raw(email=login.email)
+            user = await self.uow.users.find_one(email=login.email)
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
 
@@ -65,5 +66,5 @@ class UsersService:
 
     async def get_user_by_id(self, user_id: int):
         async with self.uow:
-            user = await self.uow.users.find_one_raw(id=user_id)
+            user = await self.uow.users.find_one(id=user_id)
             return user

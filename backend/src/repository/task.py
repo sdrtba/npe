@@ -1,6 +1,6 @@
 from src.models import Task
-from src.repository.repository import SQLAlchemyRepository
+from src.utils.repository import SQLAlchemyRepository
 
 
-class TaskRepository(SQLAlchemyRepository):
+class TaskRepository(SQLAlchemyRepository[Task]):
     model = Task

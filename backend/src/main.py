@@ -9,7 +9,7 @@ from src.core.database import create_tables, drop_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await drop_tables()
+    # await drop_tables()
     await create_tables()
     yield
 

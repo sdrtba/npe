@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Cookie, HTTPException, Response
 
 from src.core.config import settings
-from src.core.dependencies import UserSrvDep, SessionSrvDep, CurrentUser
 from src.schemas import UserCreate, TokenResponse, LoginRequest, UserRead
+from src.core.dependencies import UserSrvDep, SessionSrvDep, CurrentUser
 
 router = APIRouter()
 
@@ -25,8 +25,8 @@ async def register_user(
         value=tokens["refresh_token"],
         httponly=True,
         secure=True,
-        samesite="lax",
-        max_age=settings.REFRESH_TOKEN_EXP_MIN,
+        # samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXP_SEC,
     )
     return TokenResponse(accessToken=tokens["access_token"])
 
@@ -47,9 +47,9 @@ async def login(
         key="refreshToken",
         value=tokens["refresh_token"],
         httponly=True,
-        # secure=True,
+        secure=True,
         # samesite="lax",
-        max_age=settings.REFRESH_TOKEN_EXP_MIN,
+        max_age=settings.REFRESH_TOKEN_EXP_SEC,
     )
     return TokenResponse(accessToken=tokens["access_token"])
 
@@ -68,7 +68,7 @@ async def logout(
         key="refreshToken",
         httponly=True,
         secure=True,
-        samesite="lax",
+        # samesite="lax",
     )
 
     return {"message": "Successfully logged out"}
@@ -104,9 +104,9 @@ async def refresh_token(
         key="refreshToken",
         value=tokens["refresh_token"],
         httponly=True,
-        # secure=True,
+        secure=True,
         # samesite="lax",
-        max_age=settings.REFRESH_TOKEN_EXP_MIN,
+        max_age=settings.REFRESH_TOKEN_EXP_SEC,
     )
 
     return TokenResponse(accessToken=tokens["access_token"])
