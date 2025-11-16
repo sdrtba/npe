@@ -41,7 +41,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<AuthError | null>(null)
-  const [actionLoading, setActionLoading] = useState(false)
+  // const [actionLoading, setActionLoading] = useState(false)
 
   const loading = status === 'idle' || status === 'authenticating'
 

@@ -6,23 +6,23 @@ from passlib.hash import bcrypt
 from src.core.config import settings
 
 
+# Password
 def hash_password(password: str) -> str:
     return bcrypt.hash(password)
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.verify(plain_password, hashed_password)
+def verify_password(password: str, hashed_password: str) -> bool:
+    return bcrypt.verify(password, hashed_password)
 
 
+# JWT
 def create_access_token(payload: dict) -> str:
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict:
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
         return None
@@ -30,32 +30,29 @@ def decode_access_token(token: str) -> dict:
         return None
 
 
-def create_refresh_token() -> tuple[str, bytes]:
-    token = secrets.token_bytes(32)
-    token_hex = token.hex()
-    token_hash = hashlib.sha256(token).digest()
-
-    return token_hex, token_hash
-
-    # token = secrets.token_urlsafe(32)
-    # token_hash = hashlib.sha256(token.encode()).digest()
-    # return token, token_hash
+# Refresh Token
+def hash_refresh_token(refresh_token: str) -> str:
+    return hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
 
 
-def verify_refresh_token(token: str, stored_hash: bytes) -> bool:
-    computed_hash = hashlib.sha256(token.encode()).digest()
-    return hmac.compare_digest(computed_hash, stored_hash)
+def create_refresh_token() -> tuple[str, str]:
+    token = secrets.token_urlsafe(32)
+    token_hash = hash_refresh_token(token)
+
+    return token, token_hash
 
 
-def hash_refresh_token(refresh_token: str) -> bytes:
-    token_bytes = bytes.fromhex(refresh_token)
-    return hashlib.sha256(token_bytes).digest()
+def verify_refresh_token(token: str, hashed_token: str) -> bool:
+    computed_hash = hash_refresh_token(token)
+    return hmac.compare_digest(computed_hash, hashed_token)
 
 
-def hash_flag(flag: str) -> bytes:
-    return hashlib.sha256(flag.encode()).digest()
+# Flag
+def hash_flag(flag: str) -> str:
+    normalized_flag = flag.strip()
+    return hashlib.sha256(normalized_flag.encode("utf-8")).hexdigest()
 
 
-def verify_flag(provided_flag: str, stored_hash: bytes) -> bool:
-    computed_hash = hashlib.sha256(provided_flag.encode()).digest()
-    return hmac.compare_digest(computed_hash, stored_hash)
+def verify_flag(flag: str, hashed_flag: str) -> bool:
+    computed_hash_hex = hash_flag(flag)
+    return hmac.compare_digest(computed_hash_hex, hashed_flag)

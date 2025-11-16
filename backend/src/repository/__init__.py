@@ -1,7 +1,12 @@
-from src.repository.sessions import SessionsRepository
-from src.repository.users import UsersRepository
+from src.repository.user import UserRepository
+from src.repository.session import SessionRepository
+from src.repository.task import TaskRepository
+from src.repository.uow import UnitOfWork, AbstractUnitOfWork
 
 __all__ = [
-    "UsersRepository",
-    "SessionsRepository",
+    "UserRepository",
+    "SessionRepository",
+    "TaskRepository",
+    "UnitOfWork",
+    "AbstractUnitOfWork",
 ]

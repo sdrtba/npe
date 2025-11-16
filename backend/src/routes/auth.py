@@ -47,8 +47,8 @@ async def login(
         key="refreshToken",
         value=tokens["refresh_token"],
         httponly=True,
-        secure=True,
-        samesite="lax",
+        # secure=True,
+        # samesite="lax",
         max_age=settings.REFRESH_TOKEN_EXP_MIN,
     )
     return TokenResponse(accessToken=tokens["access_token"])
@@ -60,6 +60,7 @@ async def logout(
     session_service: SessionSrvDep,
     refresh_token: str | None = Cookie(default=None, alias="refreshToken"),
 ):
+    print(refresh_token)
     if refresh_token:
         await session_service.revoke_token(refresh_token)
 
@@ -103,8 +104,8 @@ async def refresh_token(
         key="refreshToken",
         value=tokens["refresh_token"],
         httponly=True,
-        secure=True,
-        samesite="lax",
+        # secure=True,
+        # samesite="lax",
         max_age=settings.REFRESH_TOKEN_EXP_MIN,
     )
 

@@ -3,7 +3,8 @@ import { useCategories } from '@/hooks/useCategories'
 import styles from '@/styles/Tasks.module.css'
 
 export const Tasks = () => {
-  const { categories, loading, error, refetch } = useCategories()
+  const { categories, loading } = useCategories()
+  // const { categories, loading, error, refetch } = useCategories()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   if (loading) {
