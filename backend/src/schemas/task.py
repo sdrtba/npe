@@ -1,10 +1,13 @@
 from __future__ import annotations
+from enum import Enum
 from datetime import datetime
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, ConfigDict
 
-from src.core.enums import Difficulty
-from src.schemas.user import UserRead
-from src.schemas.base import ORMModel
+
+class Difficulty(str, Enum):
+    easy = "easy"
+    medium = "medium"
+    hard = "hard"
 
 
 # =========================
@@ -12,20 +15,17 @@ from src.schemas.base import ORMModel
 # =========================
 
 
-class CategoryBase(BaseModel):
-    name: str
-
-
-class CategoryCreate(CategoryBase):
-    pass
-
-
-class CategoryRead(CategoryBase, ORMModel):
+class CategoryRead(BaseModel):
     id: int
+    name: str
+    model_config = ConfigDict(from_attributes=True)
 
 
-class CategoryWithTasksCount(CategoryRead):
+class CategoryWithTasksCount(BaseModel):
+    id: int
     tasks_count: int
+    name: str
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =========================
@@ -33,12 +33,13 @@ class CategoryWithTasksCount(CategoryRead):
 # =========================
 
 
-class TaskAttachmentRead(ORMModel):
+class TaskAttachmentRead(BaseModel):
     id: int
     task_id: int
     filename: str = Field(min_length=1, max_length=256)
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =========================
@@ -46,70 +47,24 @@ class TaskAttachmentRead(ORMModel):
 # =========================
 
 
-class TaskBase(BaseModel):
-    category_id: int
-    name: str = Field(min_length=1, max_length=256)
-    description: str
-    author: str | None = None
-    difficulty: Difficulty
-    base_score: int = Field(ge=0)
-
-
-class TaskCreate(TaskBase):
-    flag: SecretStr = Field(min_length=1)
-
-
 # Для списка задач по категории: /tasks/{category}
-class TaskListItem(ORMModel):
+class TaskListItem(BaseModel):
     id: int
-    name: str
+    # category_id: int
+    name: str = Field(min_length=1, max_length=256)
+    slug: str = Field(min_length=1, max_length=256)
     difficulty: Difficulty
     base_score: int
-    category_id: int
+    category: CategoryRead
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Детальная задача: /tasks/{category}/{task_id}
-class TaskRead(ORMModel, TaskBase):
-    id: int
+class TaskRead(TaskListItem):
+    description: str
+    author: str | None = None
     created_at: datetime
     updated_at: datetime
 
-    category_id: int
-    # attachments: list[TaskAttachmentRead] = []
-
-
-# =========================
-# Submission / проверка флага
-# =========================
-
-
-class SubmissionCreate(BaseModel):
-    task_id: int
-    flag: SecretStr = Field(min_length=1)
-
-
-class SubmissionRead(ORMModel):
-    id: int
-    user_id: int
-    task_id: int
-    is_correct: bool
-    created_at: datetime
-
-
-# =========================
-# Solve (решённые задачи)
-# =========================
-
-
-class SolveRead(ORMModel):
-    user_id: int
-    task_id: int
-    solved_at: datetime
-    points_awarded: int = Field(ge=0)
-
-
-# Пример для таблицы лидерборда
-class UserScoreEntry(BaseModel):
-    user: UserRead
-    total_points: int
-    solves_count: int
+    attachments: list[TaskAttachmentRead] = []
+    model_config = ConfigDict(from_attributes=True)

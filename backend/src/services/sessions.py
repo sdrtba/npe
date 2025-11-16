@@ -4,7 +4,7 @@ import datetime
 from src.schemas import UserRead
 from src.core.config import settings
 from src.utils.uow import AbstractUnitOfWork
-from src.core.security import create_access_token, create_refresh_token, hash_refresh_token
+from src.utils.security import create_access_token, create_refresh_token, hash_refresh_token
 
 
 class SessionsService:

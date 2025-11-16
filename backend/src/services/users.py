@@ -3,7 +3,7 @@ from psycopg import IntegrityError
 
 from src.schemas import UserCreate, UserRead, LoginRequest
 from src.utils.uow import AbstractUnitOfWork
-from src.core.security import hash_password, verify_password
+from src.utils.security import hash_password, verify_password
 
 
 class UsersService:

@@ -60,6 +60,6 @@ class SQLAlchemyRepository(AbstractRepository[ModelT], Generic[ModelT]):
         res = await self.session.execute(stmt)
         return res.scalar_one()
 
-    async def delete_one(self, filters: dict) -> None:
+    async def delete_one(self, **filters: any) -> None:
         stmt = delete(self.model).filter_by(**filters)
         await self.session.execute(stmt)

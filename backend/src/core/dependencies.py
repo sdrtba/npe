@@ -1,13 +1,11 @@
 from typing import Annotated
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.core.security import decode_access_token
 from src.models import User
-from src.core.database import get_db
 from src.repository import UnitOfWork
 from src.services import UsersService, SessionsService, TasksService, CategoriesService
+from src.utils.security import decode_access_token
 
 
 security = HTTPBearer(auto_error=False)
@@ -37,7 +35,6 @@ UserSrvDep = Annotated[UsersService, Depends(get_user_service)]
 SessionSrvDep = Annotated[SessionsService, Depends(get_session_service)]
 TaskSrvDep = Annotated[TasksService, Depends(get_tasks_service)]
 CategorySrvDep = Annotated[CategoriesService, Depends(get_categories_service)]
-SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
 
 async def get_current_user(
@@ -63,7 +60,7 @@ async def get_current_user(
     user = await user_service.get_user_by_id(payload.get("id"))
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 

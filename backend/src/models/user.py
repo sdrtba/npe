@@ -4,7 +4,7 @@ from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.schemas import UserRead
-from src.core.security import verify_password, verify_refresh_token
+from src.utils.security import verify_password, verify_refresh_token
 from src.models.base import Base, intpk, created_at, updated_at, expires_at
 
 if TYPE_CHECKING:
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 class User(Base):
     __tablename__ = "users"
     id: Mapped[intpk]
-    username: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
-    email: Mapped[str] = mapped_column(String(256), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
@@ -34,7 +34,7 @@ class RefreshSession(Base):
     __tablename__ = "refresh_sessions"
     id: Mapped[intpk]
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    refresh_token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    refresh_token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     expires_at: Mapped[expires_at]
     created_at: Mapped[created_at]
 

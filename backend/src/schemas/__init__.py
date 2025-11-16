@@ -1,40 +1,17 @@
-from src.schemas.base import ORMModel
-from src.schemas.user import TokenResponse, LoginRequest, UserBase, UserCreate, UserRead, UserUpdate
-from src.schemas.task import (
-    CategoryBase,
-    CategoryCreate,
-    CategoryRead,
-    CategoryWithTasksCount,
-    TaskAttachmentRead,
-    TaskBase,
-    TaskCreate,
-    TaskListItem,
-    TaskRead,
-    SubmissionCreate,
-    SubmissionRead,
-    SolveRead,
-    UserScoreEntry,
-)
+from src.schemas.user import TokenResponse, LoginRequest, UserBase, UserCreate, UserRead, UserUpdate, UserChangePassword
+from src.schemas.task import CategoryRead, CategoryWithTasksCount, TaskAttachmentRead, TaskListItem, TaskRead
 
 __all__ = [
-    "ORMModel",
     "TokenResponse",
     "LoginRequest",
     "UserBase",
     "UserCreate",
     "UserRead",
     "UserUpdate",
-    "CategoryBase",
-    "CategoryCreate",
+    "UserChangePassword",
     "CategoryRead",
     "CategoryWithTasksCount",
     "TaskAttachmentRead",
-    "TaskBase",
-    "TaskCreate",
     "TaskListItem",
     "TaskRead",
-    "SubmissionCreate",
-    "SubmissionRead",
-    "SolveRead",
-    "UserScoreEntry",
 ]

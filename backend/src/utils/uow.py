@@ -35,8 +35,8 @@ class AbstractUnitOfWork(ABC):
 
 
 class UnitOfWork(AbstractUnitOfWork):
-    def __init__(self):
-        self.session_factory = SessionLocal
+    def __init__(self, session_factory=SessionLocal):
+        self.session_factory = session_factory
 
     async def __aenter__(self):
         self.session: AsyncSession = self.session_factory()
