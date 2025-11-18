@@ -20,13 +20,14 @@ class TaskRepository(SQLAlchemyRepository[Task]):
         res = await self.session.execute(stmt)
         return res.scalars().first()
 
-    async def find_by_category_id(self, category_id: int) -> list[Task]:
+    async def find_by_category_name(self, category_name: str) -> list[Task]:
         stmt = (
             select(Task)
             .options(
                 selectinload(Task.category),
             )
-            .where(Task.category_id == category_id)
+            .where(Task.category.has(name=category_name))
+            # .where(Task.category_id == category_name)
         )
         res = await self.session.execute(stmt)
         return res.scalars().all()

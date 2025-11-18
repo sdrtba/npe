@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXP_MIN: int
     REFRESH_TOKEN_EXP_SEC: int
     CORS_ORIGINS: list[str] = []
+    FILE_STORAGE_DIR: str
 
     DEBUG: bool = False
 

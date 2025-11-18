@@ -31,6 +31,7 @@ def get_categories_service(uow: UnitOfWork = Depends(get_uow)):
     return CategoriesService(uow)
 
 
+UoWDep = Annotated[UnitOfWork, Depends(get_uow)]
 UserSrvDep = Annotated[UsersService, Depends(get_user_service)]
 SessionSrvDep = Annotated[SessionsService, Depends(get_session_service)]
 TaskSrvDep = Annotated[TasksService, Depends(get_tasks_service)]

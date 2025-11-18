@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useCategories } from '@/hooks/useCategories'
 import styles from '@/styles/Tasks.module.css'
+import { Link } from 'react-router-dom'
 
 export const Tasks = () => {
-  const { categories, loading } = useCategories()
-  // const { categories, loading, error, refetch } = useCategories()
+  const { categories, loading, error, refetch } = useCategories()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   if (loading) {
@@ -18,25 +18,37 @@ export const Tasks = () => {
     )
   }
 
-  // if (error) {
-  //   return (
-  //     <div className={styles.container}>
-  //       <div className={styles.error}>
-  //         <p>{error.message}</p>
-  //         {error.status && <span className={styles.errorCode}>Код ошибки: {error.status}</span>}
-  //         <button onClick={refetch} className={styles.retryBtn}>
-  //           Повторить
-  //         </button>
-  //       </div>
-  //     </div>
-  //   )
-  // }
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <p>{error.message}</p>
+          {error.status && <span className={styles.errorCode}>Код ошибки: {error.status}</span>}
+          <button onClick={refetch} className={styles.retryBtn}>
+            Повторить
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <h2>Категории задач</h2>
+      <ul>
+        {categories.map((cat) => (
+          <li key={cat.id}>
+            <Link to={`/tasks/${encodeURIComponent(cat.name)}`}>{cat.name}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Мои задачи</h1>
-        <button className={styles.addCategoryBtn}>+ Добавить категорию</button>
       </div>
 
       {categories.length === 0 ? (
@@ -79,13 +91,6 @@ export const Tasks = () => {
                     🗑️
                   </button>
                 </div>
-              </div>
-
-              <div className={styles.categoryInfo}>
-                <span className={styles.taskCount}>0 задач</span>
-                <span className={styles.categoryDate}>
-                  Создана: {new Date(category.createdAt).toLocaleDateString('ru-RU')}
-                </span>
               </div>
 
               <button

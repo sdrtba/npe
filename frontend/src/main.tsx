@@ -8,6 +8,8 @@ import { Tasks } from '@/pages/Tasks'
 import { Home } from '@/pages/Home'
 import { NotFound } from '@/pages/NotFound'
 import { MainLayout } from '@/components/MainLayout'
+import { CategoryTasksPage } from '@/pages/CategoryTaskPage'
+import { TaskDetailsPage } from '@/pages/TaskDetailsPage '
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -18,7 +20,11 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<Home />} />
 
             <Route element={<AuthGate requireAuth redirectTo="/" />}>
-              <Route path="/tasks" element={<Tasks />} />
+              <Route path="tasks">
+                <Route index element={<Tasks />} />
+                <Route path=":category" element={<CategoryTasksPage />} />
+                <Route path=":category/:taskId" element={<TaskDetailsPage />} />
+              </Route>
               <Route path="/profile" element={<Profile />} />
             </Route>
 

@@ -16,4 +16,4 @@ updated_at = Annotated[datetime, mapped_column(DateTime(timezone=True), server_d
 
 expires_at = Annotated[datetime, mapped_column(DateTime(timezone=True), index=True, nullable=False)]
 
-solved_at = Annotated[datetime, mapped_column(DateTime(timezone=True), index=True, nullable=False)]
+solved_at = Annotated[datetime, mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)]
