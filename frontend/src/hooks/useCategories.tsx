@@ -18,7 +18,7 @@ export const useCategories = (): UseCategoriesReturn => {
     try {
       setLoading(true)
       setError(null)
-      const { data } = await api.get<Category[]>('/tasks/category')
+      const { data } = await api.get<Category[]>('/categories')
       setCategories(data)
     } catch (err: unknown) {
       const apiError = toApiError(err, 'Ошибка загрузки категорий')

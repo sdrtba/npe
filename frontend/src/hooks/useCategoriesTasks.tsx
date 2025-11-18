@@ -18,7 +18,7 @@ export const useCategoriesTasks = (category: string): UseCategoriesTasksReturn =
     try {
       setLoading(true)
       setError(null)
-      const { data } = await api.get<Task[]>(`/tasks/category/${encodeURIComponent(category)}`)
+      const { data } = await api.get<Task[]>(`/categories/${encodeURIComponent(category)}`)
       setTasks(data)
     } catch (err: unknown) {
       const apiError = toApiError(err, 'Ошибка загрузки задач категории')

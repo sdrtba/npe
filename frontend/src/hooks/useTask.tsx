@@ -19,7 +19,7 @@ export const useTask = (taskId: string): UseTaskReturn => {
     try {
       setLoading(true)
       setError(null)
-      const { data } = await api.get<Task>(`/tasks/${encodeURIComponent(taskId)}`)
+      const { data } = await api.get<Task>(`/categories/tasks/${encodeURIComponent(taskId)}`)
       setTask(data)
     } catch (err: unknown) {
       const apiError = toApiError(err, 'Ошибка загрузки задачи')
@@ -33,7 +33,7 @@ export const useTask = (taskId: string): UseTaskReturn => {
     try {
       setLoading(true)
       setError(null)
-      const { data } = await api.post<string>(`/tasks/${encodeURIComponent(taskId)}`, { flag })
+      const { data } = await api.post<string>(`/categories/tasks/${encodeURIComponent(taskId)}/submit`, { flag })
       console.log(data)
     } catch (err: unknown) {
       const apiError = toApiError(err, 'Ошибка загрузки флага')

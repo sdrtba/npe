@@ -44,7 +44,7 @@ class TaskAttachmentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     def model_post_init(self, _):
-        self.download_url = f"/api/tasks/files/{self.id}"
+        self.download_url = f"/api/categories/tasks/attachment/{self.id}"
 
 
 # =========================
@@ -79,5 +79,6 @@ class CheckFlagRequest(BaseModel):
 
 
 class CheckFlagResponse(BaseModel):
-    status: Literal["ok", "already_solved", "wrong"]
-    points_awarded: int | None = None
+    correct: bool
+    awarded: int
+    already_solved: bool

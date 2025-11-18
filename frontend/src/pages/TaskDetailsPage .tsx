@@ -85,24 +85,3 @@ export const TaskDetailsPage = () => {
     </div>
   )
 }
-
-// export type Attachment = {
-//   id: string
-//   task_id: string
-//   filename: string
-//   download_url: string
-//   sha256: string
-//   created_at: string
-// }
-
-// id: string
-//   name: string
-//   difficulty: Difficulty
-//   base_score: string
-//   category: Category
-//   attachments: Attachemnt[]
-//   slug?: string
-//   author?: string
-//   description?: string
-//   createdAt?: string
-//   updatedAt?: string
