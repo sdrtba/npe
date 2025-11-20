@@ -11,6 +11,12 @@
   margin-bottom: 4rem;
 }
 
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .title {
   font-size: 3.5rem;
   font-weight: 900;

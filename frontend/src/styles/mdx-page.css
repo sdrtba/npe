@@ -28,3 +28,8 @@
   margin: 20px 0;
   border-radius: 8px;
 }
+
+.prose pre code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

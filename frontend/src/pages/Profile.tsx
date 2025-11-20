@@ -45,13 +45,6 @@ export const Profile = () => {
               <span className={styles.statLabel}>Рейтинг</span>
             </div>
           </div>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>🔥</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>0</span>
-              <span className={styles.statLabel}>Серия дней</span>
-            </div>
-          </div>
         </div>
 
         {/* Секция достижений */}
@@ -60,16 +53,8 @@ export const Profile = () => {
           <div className={styles.achievements}>
             <div className={styles.achievementPlaceholder}>
               <span className={styles.placeholderIcon}>🎯</span>
-              <p className={styles.placeholderText}>Начните решать задачи, чтобы получить достижения</p>
+              <p className={styles.placeholderText}>Начните решать задачи</p>
             </div>
-          </div>
-        </div>
-
-        {/* Секция активности */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Последняя активность</h2>
-          <div className={styles.activity}>
-            <p className={styles.placeholderText}>Пока нет активности</p>
           </div>
         </div>
 

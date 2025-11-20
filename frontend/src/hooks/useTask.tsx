@@ -1,64 +1,53 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { api, toApiError, type ApiError } from '@/api/axios'
 import type { Task } from '@/types/task'
+import { useApi } from './useApi'
 
 type UseTaskReturn = {
   task: Task | null
   loading: boolean
   error: ApiError | null
-  solved?: boolean
   refetch: () => Promise<void>
-  submitFlag: (taskId: string, flag: string) => Promise<void>
+  submitFlag: (flag: string) => Promise<void>
+  clearError: () => void
+  submitting: boolean // отдельный флаг для отправки
 }
 
 export const useTask = (taskId: string): UseTaskReturn => {
-  const [task, setTask] = useState<Task | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<ApiError | null>(null)
+  const { data, loading, error, refetch, clearError } = useApi<Task | null>({
+    url: `/categories/tasks/${encodeURIComponent(taskId)}`,
+    defaultValue: null,
+    errorMessage: 'Ошибка загрузки задачи',
+  })
 
-  const fetchTask = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const { data } = await api.get<Task>(`/categories/tasks/${encodeURIComponent(taskId)}`)
-      setTask(data)
-    } catch (err: unknown) {
-      const apiError = toApiError(err, 'Ошибка загрузки задачи')
-      setError(apiError)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const [submitting, setSubmitting] = useState(false)
 
-  const submitFlag = useCallback(async (taskId: string, flag: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const { data } = await api.post<string>(`/categories/tasks/${encodeURIComponent(taskId)}/submit`, { flag })
-      console.log(data)
-    } catch (err: unknown) {
-      const apiError = toApiError(err, 'Ошибка загрузки флага')
-      setError(apiError)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const submitFlag = useCallback(
+    async (flag: string) => {
+      try {
+        setSubmitting(true)
+        clearError()
+        const { data } = await api.post<string>(`/categories/tasks/${encodeURIComponent(taskId)}/submit`, { flag })
+        console.log(data)
+        // После успешной отправки можно обновить данные задачи
+        await refetch()
+      } catch (err: unknown) {
+        const apiError = toApiError(err, 'Ошибка отправки флага')
+        throw apiError // пробрасываем ошибку чтобы компонент мог её обработать
+      } finally {
+        setSubmitting(false)
+      }
+    },
+    [taskId, clearError, refetch]
+  )
 
-  useEffect(() => {
-    let mounted = true
-
-    const loadTask = async () => {
-      await fetchTask()
-    }
-
-    if (mounted) {
-      loadTask()
-    }
-
-    return () => {
-      mounted = false
-    }
-  }, [fetchTask])
-
-  return { task, loading, error, refetch: fetchTask, submitFlag }
+  return {
+    task: data,
+    loading,
+    error,
+    refetch,
+    submitFlag,
+    clearError,
+    submitting,
+  }
 }

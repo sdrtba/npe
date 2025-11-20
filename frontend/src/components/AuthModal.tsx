@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { Modal } from '@/components/Modal'
@@ -17,8 +18,8 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     password: '',
   })
   const [error, setError] = useState('')
-
   const { login, register } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,12 +27,13 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
 
     try {
       if (mode === 'login') {
-        await login(formData.username, formData.password)
+        await login(formData.email, formData.password)
       } else {
         await register(formData.username, formData.email, formData.password)
       }
       onClose()
       setFormData({ username: '', email: '', password: '' })
+      navigate('/tasks')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Произошла ошибка')
     }
@@ -47,7 +49,6 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
   const switchMode = () => {
     setMode(mode === 'login' ? 'register' : 'login')
     setError('')
-    setFormData({ username: '', email: '', password: '' })
   }
 
   return (
@@ -55,33 +56,33 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalP
       <form onSubmit={handleSubmit} className={styles.form}>
         {error && <div className={styles.error}>{error}</div>}
 
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>Имя пользователя</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            className={styles.input}
-            required
-            autoComplete="username"
-          />
-        </div>
-
         {mode === 'register' && (
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Email</label>
+            <label className={styles.label}>Имя пользователя</label>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               className={styles.input}
               required
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
         )}
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className={styles.input}
+            required
+            autoComplete="email"
+          />
+        </div>
 
         <div className={styles.inputGroup}>
           <label className={styles.label}>Пароль</label>

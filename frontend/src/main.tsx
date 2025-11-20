@@ -8,11 +8,10 @@ import { NotFound } from '@/pages/NotFound'
 import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { Tasks } from '@/pages/Tasks'
-import { CategoryTaskPage } from '@/pages/CategoryTaskPage'
-import { TaskDetailsPage } from '@/pages/TaskDetailsPage'
-import { LearnIndex } from '@/pages/LearnIndex'
-import { CategoryPage } from '@/pages/CategoryPage'
-import { ArticlePage } from '@/pages/ArticlePage'
+import { TasksCategories } from '@/pages/TasksCategories'
+import { Learn } from '@/pages/Learn'
+import { LearnCategories } from '@/pages/LearnCategories'
+import { LearnDetailsPage } from '@/pages/LearnDetailsPage'
 import '@/styles/globals.css'
 
 createRoot(document.getElementById('root')!).render(
@@ -26,13 +25,12 @@ createRoot(document.getElementById('root')!).render(
             <Route element={<AuthGate requireAuth redirectTo="/" />}>
               <Route path="/tasks">
                 <Route index element={<Tasks />} />
-                <Route path=":category" element={<CategoryTaskPage />} />
-                <Route path=":category/:taskId" element={<TaskDetailsPage />} />
+                <Route path=":category" element={<TasksCategories />} />
               </Route>
               <Route path="/learn">
-                <Route index element={<LearnIndex />} />
-                <Route path=":category" element={<CategoryPage />} />
-                <Route path=":category/:slug" element={<ArticlePage />} />
+                <Route index element={<Learn />} />
+                <Route path=":category" element={<LearnCategories />} />
+                <Route path=":category/:slug" element={<LearnDetailsPage />} />
               </Route>
               <Route path="/profile" element={<Profile />} />
             </Route>

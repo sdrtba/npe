@@ -5,7 +5,7 @@ import fm from 'front-matter'
 import { loadArticle } from '@/api/content'
 import styles from '@/styles/ArticlePage.module.css'
 
-export const ArticlePage = () => {
+export const LearnDetailsPage = () => {
   const { category, slug } = useParams()
   const navigate = useNavigate()
   const [content, setContent] = useState('')

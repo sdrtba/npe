@@ -16,7 +16,7 @@ export async function loadCategory(category: string) {
 }
 
 export async function loadArticle(category: string, slug: string) {
-  const mdUrl = `/content/${category}/${slug}.md`
+  const mdUrl = `/content/${category}/${slug}/index.md`
   const res = await fetch(mdUrl, { cache: 'no-cache' })
   if (!res.ok) throw new Response('Article not found', { status: 404 })
   const text = await res.text()

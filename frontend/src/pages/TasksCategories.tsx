@@ -1,14 +1,17 @@
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useCategoriesTasks } from '@/hooks/useCategoriesTasks'
+import { TaskModal } from '@/components/TaskModal'
 import styles from '@/styles/CategoryTask.module.css'
 
-export const CategoryTaskPage = () => {
+export const TasksCategories = () => {
   const { category } = useParams<{ category: string }>()
   const navigate = useNavigate()
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   if (!category) return <div>Категория не указана</div>
 
-  const { tasks, loading, error, refetch } = useCategoriesTasks(category)
+  const { tasks, loading, error } = useCategoriesTasks(category)
 
   if (loading) {
     return (
@@ -35,31 +38,30 @@ export const CategoryTaskPage = () => {
     )
   }
 
+  const handleTaskClick = (e: React.MouseEvent, taskId: string) => {
+    // Предотвращаем открытие модального окна если кликнули на ссылку или кнопку
+    const target = e.target as HTMLElement
+    if (target.tagName === 'A' || target.closest('a')) {
+      return
+    }
+    setSelectedTaskId(taskId)
+  }
+
   return (
     <div className={styles.container}>
-      <button onClick={() => navigate('/tasks')} className={styles.backLink}>
-        ← Все категории
-      </button>
-
-      <div className={styles.header}>
-        <div className={styles.categoryInfo}>
-          <span className={styles.categoryIcon}>{'📁'}</span>
-          <div>
-            <h1 className={styles.title}>{'category.name'}</h1>
-            <p className={styles.description}>{'category.description'}</p>
-          </div>
-        </div>
-        <div className={styles.stats}>
-          <span className={styles.statItem}>
-            📊 {tasks.length} {tasks.length === 1 ? 'задача' : 'задач'}
-          </span>
-        </div>
+      <div className={styles.headerRow}>
+        <h1 className={styles.categoryTitle}>{category.toUpperCase()}</h1>
       </div>
 
       {tasks.length > 0 ? (
         <div className={styles.tasksList}>
           {tasks.map((task) => (
-            <Link key={task.id} to={`/tasks/${category}/${task.id}`} className={styles.taskCard}>
+            <div
+              key={task.id}
+              onClick={(e) => handleTaskClick(e, task.id)}
+              className={styles.taskCard}
+              style={{ cursor: 'pointer' }}
+            >
               <div className={styles.taskHeader}>
                 <h3 className={styles.taskTitle}>{task.name}</h3>
                 <div className={styles.taskBadges}>
@@ -82,7 +84,7 @@ export const CategoryTaskPage = () => {
                 {task.solved && <span className={styles.solvedBadge}>✅ Решено</span>}
                 <span className={styles.arrow}>→</span>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       ) : (
@@ -91,6 +93,8 @@ export const CategoryTaskPage = () => {
           <p className={styles.emptyText}>В этой категории пока нет задач</p>
         </div>
       )}
+
+      <TaskModal isOpen={!!selectedTaskId} onClose={() => setSelectedTaskId(null)} taskId={selectedTaskId} />
     </div>
   )
 }

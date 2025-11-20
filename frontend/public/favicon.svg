@@ -1,0 +1,47 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Подгони цвета под свой UI при желании -->
+    <style>
+      .bg { fill: #f7f4ff; }      /* светлый фон, как у сайта */
+      .main { fill: #715cff; }    /* основной фиолетовый */
+      .accent { fill: #ffffff; }  /* белые элементы */
+      .stroke {
+        fill: none;
+        stroke: #4b3ccf;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- Фон -->
+  <rect x="0" y="0" width="64" height="64" rx="16" class="bg"></rect>
+
+  <!-- Голова лягушки -->
+  <circle cx="32" cy="34" r="18" class="main"></circle>
+
+  <!-- "Щёчки" / верх головы, чтобы форма была более забавной -->
+  <circle cx="22" cy="24" r="8" class="main"></circle>
+  <circle cx="42" cy="24" r="8" class="main"></circle>
+
+  <!-- Глаза (белки) -->
+  <circle cx="22" cy="24" r="4.5" class="accent"></circle>
+  <circle cx="42" cy="24" r="4.5" class="accent"></circle>
+
+  <!-- Зрачки -->
+  <circle cx="22" cy="24" r="2.1" fill="#4b3ccf"></circle>
+  <circle cx="42" cy="24" r="2.1" fill="#4b3ccf"></circle>
+
+  <!-- Улыбка -->
+  <path d="M22 38
+           Q32 44 42 38" class="stroke"></path>
+
+  <!-- Ямочка под улыбкой -->
+  <path d="M29 40
+           Q32 42 35 40" class="stroke"></path>
+
+  <!-- Ноздри -->
+  <circle cx="29" cy="30" r="1.2" fill="#4b3ccf"></circle>
+  <circle cx="35" cy="30" r="1.2" fill="#4b3ccf"></circle>
+</svg>

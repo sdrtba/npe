@@ -36,7 +36,7 @@ const categoryInfo: Record<string, { name: string; icon: string; description: st
   },
 }
 
-export const CategoryPage = () => {
+export const LearnCategories = () => {
   const { category } = useParams<{ category: string }>()
   const navigate = useNavigate()
   const [list, setList] = useState<ArticleMeta[]>([])
@@ -102,10 +102,6 @@ export const CategoryPage = () => {
 
   return (
     <div className={styles.container}>
-      <button onClick={() => navigate('/learn')} className={styles.backLink}>
-        ← Все категории
-      </button>
-
       <div className={styles.header}>
         <div className={styles.categoryInfo}>
           <span className={styles.categoryIcon}>{info?.icon || '📁'}</span>
@@ -127,7 +123,6 @@ export const CategoryPage = () => {
             <Link key={article.slug} to={`/learn/${category}/${article.slug}`} className={styles.articleCard}>
               <div className={styles.articleHeader}>
                 <h3 className={styles.articleTitle}>{article.title}</h3>
-                {article.date && <span className={styles.articleDate}>📅 {article.date}</span>}
               </div>
 
               {<p className={styles.articleDescription}>{'article.description'}</p>}

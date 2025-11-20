@@ -18,7 +18,7 @@ export type Task = {
 export type Category = {
   id: string
   name: string
-  tasks_count?: string
+  tasks_count: string
 }
 
 export type Attachment = {

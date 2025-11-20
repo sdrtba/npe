@@ -5,6 +5,13 @@
   min-height: calc(100vh - 80px);
 }
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
 .backLink {
   display: inline-flex;
   align-items: center;
@@ -23,17 +30,6 @@
 .backLink:hover {
   color: #93c5fd;
   transform: translateX(-5px);
-}
-
-/* Заголовок */
-.header {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.7) 100%);
-  border-radius: 20px;
-  padding: 2.5rem;
-  margin-bottom: 3rem;
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
 }
 
 .categoryInfo {
@@ -366,5 +362,17 @@
 
   .header {
     padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .categoryTitle {
+    font-size: 1.5rem;
   }
 }
