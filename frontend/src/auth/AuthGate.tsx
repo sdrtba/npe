@@ -1,8 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from './AuthContext'
+import { useAuth, type User } from '@/auth/AuthContext'
 import { NotFound } from '@/pages/NotFound'
 import type { FC } from 'react'
-import type { User } from './AuthContext'
 
 export type AuthGateProps = {
   requireAuth?: boolean

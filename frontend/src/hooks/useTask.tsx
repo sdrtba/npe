@@ -6,8 +6,9 @@ type UseTaskReturn = {
   task: Task | null
   loading: boolean
   error: ApiError | null
+  solved?: boolean
   refetch: () => Promise<void>
-  sendFlag: (taskId: string, flag: string) => Promise<void>
+  submitFlag: (taskId: string, flag: string) => Promise<void>
 }
 
 export const useTask = (taskId: string): UseTaskReturn => {
@@ -29,7 +30,7 @@ export const useTask = (taskId: string): UseTaskReturn => {
     }
   }, [])
 
-  const sendFlag = useCallback(async (taskId: string, flag: string) => {
+  const submitFlag = useCallback(async (taskId: string, flag: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -59,5 +60,5 @@ export const useTask = (taskId: string): UseTaskReturn => {
     }
   }, [fetchTask])
 
-  return { task, loading, error, refetch: fetchTask, sendFlag }
+  return { task, loading, error, refetch: fetchTask, submitFlag }
 }

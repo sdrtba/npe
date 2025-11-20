@@ -1,62 +1,52 @@
+import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthContext'
 import { AuthModal } from '@/components/AuthModal'
 import styles from '@/styles/Navbar.module.css'
 
 export const Navbar = () => {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [showAuth, setShowAuth] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
+  const location = useLocation()
 
   const openLogin = () => {
     setAuthMode('login')
     setShowAuth(true)
   }
 
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => location.pathname.includes(path)
 
   return (
     <nav className={styles.navbar}>
       <div className={styles.container}>
+        {/* Логотип слева */}
         <Link to="/" className={styles.logo}>
           NPE Tasks
         </Link>
 
-        <div className={styles.menu}>
+        {/* Центральное меню (только для авторизованных) */}
+        {user && (
+          <div className={styles.centerMenu}>
+            <Link to="/tasks" className={`${styles.link} ${isActive('/tasks') ? styles.active : ''}`}>
+              Задачи
+            </Link>
+            <Link to="/learn" className={`${styles.link} ${isActive('/learn') ? styles.active : ''}`}>
+              Обучение
+            </Link>
+          </div>
+        )}
+
+        {/* Правое меню */}
+        <div className={styles.rightMenu}>
           {user ? (
-            <>
-              <Link
-                to="/tasks"
-                // className={styles.link}
-                className={`${styles.link} ${isActive('/tasks') ? styles.active : ''}`}
-              >
-                Задачи
-              </Link>
-              <Link
-                to="/profile"
-                // className={styles.link}
-                className={`${styles.link} ${isActive('/profile') ? styles.active : ''}`}
-              >
-                Профиль
-              </Link>
-              <span className={styles.username}>{user.username}</span>
-              <button onClick={handleLogout} className={styles.logoutBtn}>
-                Выйти
-              </button>
-            </>
+            <Link to="/profile" className={`${styles.profileButton} ${isActive('/profile') ? styles.active : ''}`}>
+              Профиль
+            </Link>
           ) : (
-            <>
-              <button onClick={openLogin} className={styles.secondaryBtn}>
-                Войти
-              </button>
-            </>
+            <button onClick={openLogin} className={styles.loginButton}>
+              Войти
+            </button>
           )}
         </div>
       </div>

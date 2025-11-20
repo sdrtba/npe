@@ -1,10 +1,7 @@
-from pathlib import Path
 from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import FileResponse
 
-from src.schemas import CategoryWithTasksCount, TaskRead, TaskListItem, CheckFlagResponse, CheckFlagRequest
-from src.core.dependencies import CategorySrvDep, TaskSrvDep, UoWDep, CurrentUser
-from src.core.config import settings
+from src.schemas import CategoryWithTasksCount, TaskListItem
+from src.core.dependencies import CategorySrvDep, TaskSrvDep
 
 router = APIRouter()
 

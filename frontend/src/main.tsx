@@ -3,13 +3,17 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/auth/AuthContext'
 import { AuthGate } from '@/auth/AuthGate'
+import { MainLayout } from '@/components/MainLayout'
+import { NotFound } from '@/pages/NotFound'
+import { Home } from '@/pages/Home'
 import { Profile } from '@/pages/Profile'
 import { Tasks } from '@/pages/Tasks'
-import { Home } from '@/pages/Home'
-import { NotFound } from '@/pages/NotFound'
-import { MainLayout } from '@/components/MainLayout'
-import { CategoryTasksPage } from '@/pages/CategoryTaskPage'
-import { TaskDetailsPage } from '@/pages/TaskDetailsPage '
+import { CategoryTaskPage } from '@/pages/CategoryTaskPage'
+import { TaskDetailsPage } from '@/pages/TaskDetailsPage'
+import { LearnIndex } from '@/pages/LearnIndex'
+import { CategoryPage } from '@/pages/CategoryPage'
+import { ArticlePage } from '@/pages/ArticlePage'
+import '@/styles/globals.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -20,10 +24,15 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<Home />} />
 
             <Route element={<AuthGate requireAuth redirectTo="/" />}>
-              <Route path="tasks">
+              <Route path="/tasks">
                 <Route index element={<Tasks />} />
-                <Route path=":category" element={<CategoryTasksPage />} />
+                <Route path=":category" element={<CategoryTaskPage />} />
                 <Route path=":category/:taskId" element={<TaskDetailsPage />} />
+              </Route>
+              <Route path="/learn">
+                <Route index element={<LearnIndex />} />
+                <Route path=":category" element={<CategoryPage />} />
+                <Route path=":category/:slug" element={<ArticlePage />} />
               </Route>
               <Route path="/profile" element={<Profile />} />
             </Route>

@@ -1,0 +1,221 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  min-height: calc(100vh - 80px);
+}
+
+.profileCard {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.7) 100%);
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Шапка профиля */
+.header {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.avatarSection {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+  flex-shrink: 0;
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.username {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.email {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* Статистика */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.statCard {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  transition: all 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.statIcon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 4px 10px rgba(96, 165, 250, 0.3));
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Секции */
+.section {
+  margin-bottom: 2.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Достижения */
+.achievements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.achievementPlaceholder {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+}
+
+.placeholderIcon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  filter: grayscale(1) opacity(0.5);
+}
+
+.placeholderText {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Активность */
+.activity {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+}
+
+/* Кнопки действий */
+.actions {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(96, 165, 250, 0.2);
+  text-align: center;
+}
+
+.logoutButton {
+  padding: 1rem 3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ef4444;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logoutButton:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    padding: 2rem 1rem;
+  }
+
+  .profileCard {
+    padding: 2rem;
+  }
+
+  .avatarSection {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .username {
+    font-size: 2rem;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .achievements {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}

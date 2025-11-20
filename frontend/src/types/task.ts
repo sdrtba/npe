@@ -12,6 +12,7 @@ export type Task = {
   description?: string
   createdAt?: string
   updatedAt?: string
+  solved?: boolean
 }
 
 export type Category = {

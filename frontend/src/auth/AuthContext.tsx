@@ -1,6 +1,6 @@
+import type { FC, PropsWithChildren } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api, setAccessToken, bootstrapAccessToken, toApiError, AuthExpiredError } from '@/api/axios'
-import type { FC, PropsWithChildren } from 'react'
 
 export type User = {
   id: string

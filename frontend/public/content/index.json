@@ -1,0 +1,7 @@
+{
+  "web": [{ "slug": "test", "title": "Web: основы", "date": "2025-10-02" }],
+  "stegano": [
+    { "slug": "how-to-start", "title": "Stegano: с чего начать", "date": "2025-09-14" },
+    { "slug": "stegano", "title": "Стратегии аирдропов", "date": "2025-11-01" }
+  ]
+}

@@ -1,186 +1,110 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Modal } from '@/components/Modal'
+import { useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
-import styles from '@/styles/Auth.module.css'
-
-type Mode = 'login' | 'register'
+import { Modal } from '@/components/Modal'
+import styles from '../styles/Auth.module.css'
 
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
-  initialMode?: Mode
+  initialMode?: 'login' | 'register'
 }
 
 export const AuthModal = ({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) => {
-  const [mode, setMode] = useState<Mode>(initialMode)
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode)
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+  })
+  const [error, setError] = useState('')
 
-  const { login, register, error, setError } = useAuth()
-  const navigate = useNavigate()
+  const { login, register } = useAuth()
 
-  // когда модал открывается из Navbar с другим режимом — синхронизируем
-  useEffect(() => {
-    if (isOpen) setMode(initialMode)
-  }, [isOpen, initialMode])
-
-  // очистка состояния при открытии и закрытии
-  useEffect(() => {
-    if (isOpen) {
-      setUsername('')
-      setEmail('')
-      setPassword('')
-      setConfirmPassword('')
-      setError(null)
-    }
-  }, [isOpen, setError])
-
-  const title = useMemo(() => (mode === 'login' ? 'Вход в систему' : 'Регистрация'), [mode])
-
-  const switchAction = () => {
-    setError(null)
-    setPassword('')
-    setConfirmPassword('')
-    setMode((m) => (m === 'login' ? 'register' : 'login'))
-  }
-
-  const handleClose = () => {
-    setUsername('')
-    setEmail('')
-    setPassword('')
-    setConfirmPassword('')
-    setError(null)
-    onClose()
-  }
-
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setError('')
+
     try {
       if (mode === 'login') {
-        await login(email, password)
+        await login(formData.username, formData.password)
       } else {
-        if (password !== confirmPassword) {
-          setError({ message: 'Пароли не совпадают' })
-          return
-        }
-        if (password.length < 8) {
-          setError({ message: 'Пароль должен содержать минимум 8 символов' })
-          return
-        }
-        await register(username, email, password)
+        await register(formData.username, formData.email, formData.password)
       }
-      handleClose()
-      navigate('/tasks')
-    } finally {
-      setLoading(false)
+      onClose()
+      setFormData({ username: '', email: '', password: '' })
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Произошла ошибка')
     }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
+  }
+
+  const switchMode = () => {
+    setMode(mode === 'login' ? 'register' : 'login')
+    setError('')
+    setFormData({ username: '', email: '', password: '' })
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={title}>
-      <form onSubmit={onSubmit} className={styles.form}>
-        {error && <div className={styles.error}>{error.message}</div>}
+    <Modal isOpen={isOpen} onClose={onClose} title={mode === 'login' ? 'Вход' : 'Регистрация'}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        {error && <div className={styles.error}>{error}</div>}
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Имя пользователя</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            className={styles.input}
+            required
+            autoComplete="username"
+          />
+        </div>
 
         {mode === 'register' && (
-          <div className={styles.formGroup}>
-            <label htmlFor="username" className={styles.label}>
-              Имя пользователя
-            </label>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Email</label>
             <input
-              id="username"
-              type="text"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               className={styles.input}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Введите имя пользователя"
               required
-              disabled={loading}
-              autoComplete="username"
-              minLength={3}
+              autoComplete="email"
             />
           </div>
         )}
 
-        <div className={styles.formGroup}>
-          <label htmlFor="email" className={styles.label}>
-            Email
-          </label>
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Пароль</label>
           <input
-            id="email"
-            type="email"
-            className={styles.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Введите email"
-            required
-            disabled={loading}
-            autoComplete="email"
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="password" className={styles.label}>
-            Пароль
-          </label>
-          <input
-            id="password"
             type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             className={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={mode === 'register' ? 'Минимум 8 символов' : 'Введите пароль'}
             required
-            disabled={loading}
-            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-            minLength={mode === 'register' ? 8 : undefined}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
         </div>
 
-        {mode === 'register' && (
-          <div className={styles.formGroup}>
-            <label htmlFor="confirmPassword" className={styles.label}>
-              Подтверждение пароля
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              className={styles.input}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Повторите пароль"
-              required
-              disabled={loading}
-              autoComplete="new-password"
-              minLength={8}
-            />
-          </div>
-        )}
-
-        <button type="submit" className={styles.submitBtn} disabled={loading}>
-          {loading
-            ? mode === 'login'
-              ? 'Вход...'
-              : 'Регистрация...'
-            : mode === 'login'
-              ? 'Войти'
-              : 'Зарегистрироваться'}
+        <button type="submit" className={styles.submitButton}>
+          {mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
         </button>
 
-        <div className={styles.switchRow}>
-          {mode === 'login' ? (
-            <button type="button" className={styles.linkBtn} onClick={switchAction}>
-              Нет аккаунта? Зарегистрироваться
-            </button>
-          ) : (
-            <button type="button" className={styles.linkBtn} onClick={switchAction}>
-              Уже есть аккаунт? Войти
-            </button>
-          )}
+        <div className={styles.switchMode}>
+          <span className={styles.switchText}>{mode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}</span>
+          <button type="button" onClick={switchMode} className={styles.switchButton}>
+            {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
+          </button>
         </div>
       </form>
     </Modal>
