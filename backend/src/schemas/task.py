@@ -59,6 +59,7 @@ class TaskListItem(BaseModel):
     difficulty: Difficulty
     base_score: int
     category: CategoryRead
+    solved: bool = False
     model_config = ConfigDict(from_attributes=True)
 
 

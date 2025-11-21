@@ -18,11 +18,17 @@ class TasksService:
 
             return TaskRead.model_validate(task, from_attributes=True)
 
-    async def get_tasks_by_category(self, category_name: str) -> list[TaskListItem]:
+    async def get_tasks_by_category(self, category_name: str, user_id: int | None = None) -> list[TaskListItem]:
         async with self.uow:
-            tasks = await self.uow.tasks.find_by_category_name(category_name=category_name)
+            tasks = await self.uow.tasks.find_by_category_name(category_name=category_name, user_id=user_id)
 
-            return [TaskListItem.model_validate(t, from_attributes=True) for t in tasks]
+            result = []
+            for task in tasks:
+                task_dict = TaskListItem.model_validate(task, from_attributes=True).model_dump()
+                task_dict["solved"] = len(task.solves) > 0 if user_id else False
+                result.append(TaskListItem(**task_dict))
+
+            return result
 
     async def check_flag(self, task_id: int, flag: str, user: UserRead) -> tuple[bool, bool, int | None]:
         """

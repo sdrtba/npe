@@ -68,4 +68,21 @@ async def get_current_user(
     return user
 
 
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    user_service: UsersService = Depends(get_user_service),
+) -> User | None:
+    if not credentials:
+        return None
+
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+
+    user = await user_service.get_user_by_id(payload.get("id"))
+    return user
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
