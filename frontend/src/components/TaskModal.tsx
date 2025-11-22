@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTask } from '@/hooks/useTask'
+import type { CheckFlagResponse } from '@/types/task'
 import styles from '@/styles/TaskModal.module.css'
 
 interface TaskModalProps {
@@ -36,16 +37,24 @@ interface TaskModalContentProps {
 }
 
 const TaskModalContent = ({ taskId, onClose }: TaskModalContentProps) => {
-  const { task, loading, error, submitFlag } = useTask(taskId)
+  const { task, loading, error, submitFlag, submitting } = useTask(taskId)
+  const [submitResult, setSubmitResult] = useState<CheckFlagResponse | null>(null)
+  const [submitError, setSubmitError] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setSubmitResult(null)
+    setSubmitError('')
+
     const formData = new FormData(e.currentTarget)
     const flag = formData.get('flag') as string
 
-    await submitFlag(flag)
-    if (!error) {
+    try {
+      const result = await submitFlag(flag)
+      setSubmitResult(result)
       e.currentTarget.reset()
+    } catch (err: any) {
+      setSubmitError(err.message || 'Неверный флаг')
     }
   }
 
@@ -120,12 +129,55 @@ const TaskModalContent = ({ taskId, onClose }: TaskModalContentProps) => {
               <h2 className={styles.sectionTitle}>Решение</h2>
               <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.inputGroup}>
-                  <input type="text" name="flag" placeholder="Введите флаг..." className={styles.input} required />
-                  <button type="submit" className={styles.submitButton}>
-                    Отправить
+                  <input
+                    type="text"
+                    name="flag"
+                    placeholder="Введите флаг..."
+                    className={styles.input}
+                    required
+                    disabled={submitting}
+                  />
+                  <button type="submit" className={styles.submitButton} disabled={submitting}>
+                    {submitting ? 'Проверка...' : 'Отправить'}
                   </button>
                 </div>
               </form>
+
+              {/* Результат отправки */}
+              {submitResult && (
+                <div className={submitResult.already_solved ? styles.alreadySolved : styles.successMessage}>
+                  {submitResult.already_solved ? (
+                    <>
+                      <span className={styles.icon}>ℹ️</span>
+                      <div>
+                        <div className={styles.messageTitle}>Задача уже решена</div>
+                        <div className={styles.messageText}>
+                          Вы уже решали эту задачу и получили {submitResult.awarded} очков
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className={styles.icon}>🎉</span>
+                      <div>
+                        <div className={styles.messageTitle}>Правильно!</div>
+                        <div className={styles.messageText}>Вы получили {submitResult.awarded} очков</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Ошибка отправки */}
+              {submitError && (
+                <div className={styles.errorMessage}>
+                  <span className={styles.icon}>❌</span>
+                  <div>
+                    <div className={styles.messageTitle}>Неверный флаг</div>
+                    <div className={styles.messageText}>{submitError}</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Статус решения */}

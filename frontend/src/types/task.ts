@@ -33,3 +33,9 @@ export type Attachment = {
 export type CategoryWithTasks = Category & {
   tasks: Task[]
 }
+
+export type CheckFlagResponse = {
+  correct: boolean
+  awarded: number
+  already_solved: boolean
+}

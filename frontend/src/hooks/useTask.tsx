@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { api, toApiError, type ApiError } from '@/api/axios'
-import type { Task } from '@/types/task'
+import type { Task, CheckFlagResponse } from '@/types/task'
 import { useApi } from './useApi'
 
 type UseTaskReturn = {
@@ -8,7 +8,7 @@ type UseTaskReturn = {
   loading: boolean
   error: ApiError | null
   refetch: () => Promise<void>
-  submitFlag: (flag: string) => Promise<void>
+  submitFlag: (flag: string) => Promise<CheckFlagResponse>
   clearError: () => void
   submitting: boolean // отдельный флаг для отправки
 }
@@ -23,14 +23,15 @@ export const useTask = (taskId: string): UseTaskReturn => {
   const [submitting, setSubmitting] = useState(false)
 
   const submitFlag = useCallback(
-    async (flag: string) => {
+    async (flag: string): Promise<CheckFlagResponse> => {
       try {
         setSubmitting(true)
         clearError()
-        const { data } = await api.post<string>(`/categories/tasks/${encodeURIComponent(taskId)}/submit`, { flag })
-        console.log(data)
-        // После успешной отправки можно обновить данные задачи
+        const { data } = await api.post<CheckFlagResponse>(`/categories/tasks/${encodeURIComponent(taskId)}/submit`, {
+          flag,
+        })
         await refetch()
+        return data
       } catch (err: unknown) {
         const apiError = toApiError(err, 'Ошибка отправки флага')
         throw apiError // пробрасываем ошибку чтобы компонент мог её обработать
